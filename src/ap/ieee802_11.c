@@ -206,9 +206,35 @@ u8 * hostapd_eid_s1g_capab(struct hostapd_data *hapd, u8 *eid)
 	*pos++ = WLAN_EID_S1G_CAPABILITIES;
 	*pos++ = 15;
 
-	/* TODO: something :) */
-	os_memset(pos, 0, 15);
-	pos += 15;
+	/* TODO: get these from hardware */
+
+	/* S1G Capabilities Information */
+	*pos++ = S1G_CAPAB_B0_SGI_1MHZ | S1G_CAPAB_B0_SGI_2MHZ;
+	*pos++ = 0; /* 1 */
+	*pos++ = 0; /* 2 */
+	*pos++ = S1G_CAPAB_B3_MAX_MPDU_LEN;
+	*pos++ = 0; /* 4 */
+	*pos++ = 0; /* 5 */
+	*pos++ = 0; /* 6 */
+	*pos++ = S1G_CAPAB_B7_DUP_1MHZ;
+	*pos++ = 0; /* 8 */
+	*pos++ = 0; /* 9 */
+
+	/* Supported S1G-MCS and NSS Set */
+	/* RX S1G MCS Map */
+	*pos++ = 0xfc | 1; /* MCS 7 for 1 SS, SS > 1 unsupported */
+	/* RX Highest Supported Long GI Data Rate 0:7 */
+	*pos++ = 0;
+	/* RX Highest Supported Long GI Data Rate :8 */
+	/* TX S1G MCS Map 0:6 */
+	*pos++ = 0xfa; /* MCS 7 for 1 SS, SS > 1 unsupported */
+	/* TX S1G MCS Map :7 */
+	/* TX Highest Supported Long GI Data Rate 0:6 */
+	*pos++ = (1 << 7);
+	/* TX Highest Supported Long GI Data Rate 7:8 */
+	/* Rx Single spatial stream and S1G-MCS Map for 1MHz */
+	/* Tx Single spatial stream and S1G-MCS Map for 1MHz */
+	*pos++ = 0;
 
 	return pos;
 }
