@@ -3254,6 +3254,9 @@ static int check_assoc_ies(struct hostapd_data *hapd, struct sta_info *sta,
 	if (resp != WLAN_STATUS_SUCCESS)
 		return resp;
 
+	if (elems.s1g_capab)
+		sta->flags |= WLAN_STA_WMM;
+
 	resp = check_multi_ap(hapd, sta, elems.multi_ap, elems.multi_ap_len);
 	if (resp != WLAN_STATUS_SUCCESS)
 		return resp;
