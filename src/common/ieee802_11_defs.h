@@ -40,6 +40,7 @@
 #define WLAN_FC_TYPE_MGMT		0
 #define WLAN_FC_TYPE_CTRL		1
 #define WLAN_FC_TYPE_DATA		2
+#define WLAN_FC_TYPE_EXT		3
 
 /* management */
 #define WLAN_FC_STYPE_ASSOC_REQ		0
@@ -79,6 +80,9 @@
 #define WLAN_FC_STYPE_QOS_NULL		12
 #define WLAN_FC_STYPE_QOS_CFPOLL	14
 #define WLAN_FC_STYPE_QOS_CFACKPOLL	15
+
+/* extension */
+#define WLAN_FC_STYPE_S1G_BEACON	1
 
 /* Authentication algorithms */
 #define WLAN_AUTH_OPEN			0
@@ -447,7 +451,10 @@
 #define WLAN_EID_DEVICE_LOCATION 204
 #define WLAN_EID_WHITE_SPACE_MAP 205
 #define WLAN_EID_FTM_PARAMETERS 206
+#define WLAN_EID_S1G_BCN_COMPAT 213
+#define WLAN_EID_S1G_CAPABILITIES 217
 #define WLAN_EID_VENDOR_SPECIFIC 221
+#define WLAN_EID_S1G_OPERATION 232
 #define WLAN_EID_CAG_NUMBER 237
 #define WLAN_EID_AP_CSN 239
 #define WLAN_EID_FILS_INDICATION 240
@@ -876,6 +883,19 @@ struct ieee80211_hdr {
 #define IEEE80211_HDRLEN (sizeof(struct ieee80211_hdr))
 
 #define IEEE80211_FC(type, stype) host_to_le16((type << 2) | (stype << 4))
+
+struct ieee80211_ext {
+	le16 frame_control;
+	le16 duration;
+	union {
+		struct {
+			u8 sa[ETH_ALEN];
+			u8 timestamp[4];
+			u8 change_seq;
+			u8 variable[];
+		} STRUCT_PACKED s1g_beacon;
+	} u;
+} STRUCT_PACKED;
 
 struct ieee80211_mgmt {
 	le16 frame_control;

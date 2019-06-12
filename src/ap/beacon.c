@@ -84,6 +84,33 @@ static u8 ieee802_11_erp_info(struct hostapd_data *hapd)
 	return erp;
 }
 
+#ifdef CONFIG_IEEE80211AH
+static u8 * hostapd_eid_s1g_bcn_compat(struct hostapd_data *hapd, u8 *eid)
+{
+	u16 capab_info, bcn_int;
+	u8 *pos = eid;
+
+	*pos++ = WLAN_EID_S1G_BCN_COMPAT;
+	*pos++ = 8;
+
+	/* compatibility information */
+	capab_info = host_to_le16(hostapd_own_capab_info(hapd));
+	os_memcpy(pos, &capab_info, 2);
+	pos += 2;
+
+	/* beacon interval */
+	bcn_int = host_to_le16(hapd->iconf->beacon_int);
+	os_memcpy(pos, &bcn_int, 2);
+	pos += 2;
+
+	/* TSF completion */
+	os_memset(pos, 0, 4);
+	pos += 4;
+
+	return pos;
+}
+#endif
+
 
 static u8 * hostapd_eid_ds_params(struct hostapd_data *hapd, u8 *eid)
 {
@@ -1217,10 +1244,41 @@ static size_t __ieee802_11_build_bcn_head(struct hostapd_data *hapd,
 	return pos - (u8 *) head;
 }
 
+#ifdef CONFIG_IEEE80211AH
+static size_t ieee802_11_build_s1g_bcn_head(struct hostapd_data *hapd,
+					    u8 *buf)
+{
+	struct ieee80211_ext *head = (struct ieee80211_ext *) buf;
+	u8 *pos;
+
+	head->frame_control = IEEE80211_FC(WLAN_FC_TYPE_EXT,
+					   WLAN_FC_STYPE_S1G_BEACON);
+	head->duration = host_to_le16(0);
+	os_memcpy(head->u.s1g_beacon.sa, hapd->own_addr, ETH_ALEN);
+	head->u.s1g_beacon.change_seq = 0;
+
+	/* ignore Next TBTT, Compressed SSID, and ANO for now */
+
+	pos = &head->u.s1g_beacon.variable[0];
+
+	pos = hostapd_eid_s1g_bcn_compat(hapd, pos);
+
+	return pos - (u8 *) head;
+}
+
+#endif /* CONFIG_IEEE80211AH */
+
 static size_t ieee802_11_build_bcn_head(struct hostapd_data *hapd,
 					u8 *head)
 {
-	return __ieee802_11_build_bcn_head(hapd, head);
+	switch (hapd->iconf->hw_mode) {
+#ifdef CONFIG_IEEE80211AH
+	case HOSTAPD_MODE_IEEE80211AH:
+		return ieee802_11_build_s1g_bcn_head(hapd, head);
+#endif
+	default:
+		return __ieee802_11_build_bcn_head(hapd, head);
+	};
 }
 
 static size_t __ieee802_11_build_bcn_tail(struct hostapd_data *hapd,
@@ -1359,10 +1417,28 @@ static size_t __ieee802_11_build_bcn_tail(struct hostapd_data *hapd,
 	return tailpos > tail ? tailpos - tail : 0;
 }
 
+static size_t ieee802_11_build_s1g_bcn_tail(struct hostapd_data *hapd,
+					    u8 *tail, size_t tail_len)
+{
+	u8 *pos;
+
+	pos = hostapd_eid_s1g_capab(hapd, tail);
+	pos = hostapd_eid_s1g_oper(hapd, pos);
+
+	return pos > tail ? pos - tail : 0;
+}
+
 static size_t ieee802_11_build_bcn_tail(struct hostapd_data *hapd,
 					u8 *tail, size_t tail_len)
 {
-	return __ieee802_11_build_bcn_tail(hapd, tail, tail_len);
+	switch (hapd->iconf->hw_mode) {
+#ifdef CONFIG_IEEE80211AH
+	case HOSTAPD_MODE_IEEE80211AH:
+		return ieee802_11_build_s1g_bcn_tail(hapd, tail, tail_len);
+#endif /* CONFIG_IEEE80211AH */
+	default:
+		return __ieee802_11_build_bcn_tail(hapd, tail, tail_len);
+	};
 }
 
 static int ieee802_11_build_beacon(struct hostapd_data *hapd,

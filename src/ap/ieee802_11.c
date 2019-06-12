@@ -84,7 +84,6 @@ u8 * hostapd_eid_multi_ap(struct hostapd_data *hapd, u8 *eid)
 	return eid + add_multi_ap_ie(eid, 9, multi_ap_val);
 }
 
-
 u8 * hostapd_eid_supp_rates(struct hostapd_data *hapd, u8 *eid)
 {
 	u8 *pos = eid;
@@ -199,6 +198,43 @@ u8 * hostapd_eid_ext_supp_rates(struct hostapd_data *hapd, u8 *eid)
 	return pos;
 }
 
+#ifdef CONFIG_IEEE80211AH
+u8 * hostapd_eid_s1g_capab(struct hostapd_data *hapd, u8 *eid)
+{
+	u8 *pos = eid;
+
+	*pos++ = WLAN_EID_S1G_CAPABILITIES;
+	*pos++ = 15;
+
+	/* TODO: something :) */
+	os_memset(pos, 0, 15);
+	pos += 15;
+
+	return pos;
+}
+
+u8 * hostapd_eid_s1g_oper(struct hostapd_data *hapd, u8 *eid)
+{
+	u8 *pos = eid;
+
+	*pos++ = WLAN_EID_S1G_OPERATION;
+	*pos++ = 6;
+
+	/* Channel Width */
+	*pos++ = 0x1; /* 1MHz */
+	/* Operating Class */
+	*pos++ = 1; /* USA */
+	/* Primary Channel */
+	*pos++ = hapd->iconf->channel;
+	/* Channel Center Frequency */
+	*pos++ = hapd->iconf->channel;
+	/* TODO: Basic S1G-MCS and NSS Set */
+	os_memset(pos, 0, 2);
+	pos += 2;
+
+	return pos;
+}
+#endif /* CONFIG_IEEE80211AH */
 
 u8 * hostapd_eid_rm_enabled_capab(struct hostapd_data *hapd, u8 *eid,
 				  size_t len)
