@@ -579,6 +579,11 @@ ParseRes ieee802_11_parse_elems(const u8 *start, size_t len,
 						       show_errors))
 				unknown++;
 			break;
+		case WLAN_EID_AID_REQUEST:
+			if (elen != 1)
+				break;
+			elems->aid_req = pos;
+			break;
 		default:
 			unknown++;
 			if (!show_errors)

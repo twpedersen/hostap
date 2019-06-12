@@ -239,6 +239,24 @@ u8 * hostapd_eid_s1g_capab(struct hostapd_data *hapd, u8 *eid)
 	return pos;
 }
 
+u8 * hostapd_eid_aid_response(struct hostapd_data *hapd, u8 *eid, u16 aid)
+{
+	u8 *pos = eid;
+	aid = host_to_le16(aid);
+
+
+	*pos++ = WLAN_EID_AID_RESPONSE;
+	*pos++ = 5;
+
+	os_memcpy(pos, &aid, 2);
+	pos += 2;
+
+	os_memset(pos, 0, 3);
+	pos += 3;
+
+	return pos;
+}
+
 u8 * hostapd_eid_s1g_oper(struct hostapd_data *hapd, u8 *eid)
 {
 	u8 *pos = eid;
@@ -4071,7 +4089,7 @@ rsnxe_done:
 	if (hapd->conf->s1g) {
 		p = hostapd_eid_s1g_capab(hapd, p);
 		p = hostapd_eid_s1g_oper(hapd, p);
-		/* TODO: AID Response is mandatory */
+		p = hostapd_eid_aid_response(hapd, p, sta ? sta->aid : 0);
 	}
 #endif
 
