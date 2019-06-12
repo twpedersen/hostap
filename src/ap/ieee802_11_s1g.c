@@ -53,6 +53,8 @@ int hostapd_s1g_init(struct hostapd_data *hapd)
 	if (hapd->iconf->hw_mode != HOSTAPD_MODE_IEEE80211AH)
 		return 0;
 
+	hapd->conf->s1g = 1;
+
 	if (!oper_channel)
 		hapd->iconf->s1g_oper_channel = oper_channel = channel;
 

@@ -860,6 +860,8 @@ struct hostapd_bss_config {
 	 */
 	u8 mka_psk_set;
 #endif /* CONFIG_MACSEC */
+	/* IEEE 8021.11ah */
+	int s1g;
 };
 
 /**
