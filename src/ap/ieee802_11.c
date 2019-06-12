@@ -3797,7 +3797,7 @@ static u16 send_assoc_resp(struct hostapd_data *hapd, struct sta_info *sta,
 	u8 *buf;
 	size_t buflen;
 	struct ieee80211_mgmt *reply;
-	u8 *p;
+	u8 *p, *variable;
 	u16 res = WLAN_STATUS_SUCCESS;
 
 	buflen = sizeof(struct ieee80211_mgmt) + 1024;
@@ -3835,10 +3835,17 @@ static u16 send_assoc_resp(struct hostapd_data *hapd, struct sta_info *sta,
 		host_to_le16(hostapd_own_capab_info(hapd));
 	reply->u.assoc_resp.status_code = host_to_le16(status_code);
 
-	reply->u.assoc_resp.aid = host_to_le16((sta ? sta->aid : 0) |
-					       BIT(14) | BIT(15));
+	if (hapd->conf->s1g)
+		/* S1G skips AID field */
+		variable = (u8 *) &reply->u.assoc_resp.aid;
+	else {
+		reply->u.assoc_resp.aid = host_to_le16((sta ? sta->aid : 0) |
+						       BIT(14) | BIT(15));
+		variable = reply->u.assoc_resp.variable;
+	}
+
 	/* Supported rates */
-	p = hostapd_eid_supp_rates(hapd, reply->u.assoc_resp.variable);
+	p = hostapd_eid_supp_rates(hapd, variable);
 	/* Extended supported rates */
 	p = hostapd_eid_ext_supp_rates(hapd, p);
 
@@ -4056,6 +4063,14 @@ rsnxe_done:
 			  wpabuf_len(hapd->conf->assocresp_elements));
 		p += wpabuf_len(hapd->conf->assocresp_elements);
 	}
+
+#ifdef CONFIG_IEEE80211AH
+	if (hapd->conf->s1g) {
+		p = hostapd_eid_s1g_capab(hapd, p);
+		p = hostapd_eid_s1g_oper(hapd, p);
+		/* TODO: AID Response is mandatory */
+	}
+#endif
 
 	send_len += p - reply->u.assoc_resp.variable;
 
