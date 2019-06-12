@@ -1250,9 +1250,14 @@ static size_t ieee802_11_build_s1g_bcn_head(struct hostapd_data *hapd,
 {
 	struct ieee80211_ext *head = (struct ieee80211_ext *) buf;
 	u8 *pos;
+	u8 bss_bw;
 
 	head->frame_control = IEEE80211_FC(WLAN_FC_TYPE_EXT,
 					   WLAN_FC_STYPE_S1G_BEACON);
+
+	/* TODO: this is valid for 1 and 2 MHz */
+	bss_bw = hapd->iface->s1g_primary_width == hapd->iface->s1g_oper_width ? 1 : 0;
+	head->frame_control |= WLAN_FC_SET_BSS_BW(bss_bw);
 	head->duration = host_to_le16(0);
 	os_memcpy(head->u.s1g_beacon.sa, hapd->own_addr, ETH_ALEN);
 	head->u.s1g_beacon.change_seq = 0;
