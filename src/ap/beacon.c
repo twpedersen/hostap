@@ -1123,22 +1123,11 @@ void sta_track_del(struct hostapd_sta_info *info)
 	os_free(info);
 }
 
-
-int ieee802_11_build_ap_params(struct hostapd_data *hapd,
-			       struct wpa_driver_ap_params *params)
+static int ieee802_11_bcn_tail_len(struct hostapd_data *hapd)
 {
-	struct ieee80211_mgmt *head = NULL;
-	u8 *tail = NULL;
-	size_t head_len = 0, tail_len = 0;
-	u8 *resp = NULL;
-	size_t resp_len = 0;
-#ifdef NEED_AP_MLME
-	u16 capab_info;
-	u8 *pos, *tailpos, *tailend, *csa_pos;
+	size_t tail_len;
 
-#define BEACON_HEAD_BUF_SIZE 256
 #define BEACON_TAIL_BUF_SIZE 512
-	head = os_zalloc(BEACON_HEAD_BUF_SIZE);
 	tail_len = BEACON_TAIL_BUF_SIZE;
 #ifdef CONFIG_WPS
 	if (hapd->conf->wps_state && hapd->wps_beacon_ie)
@@ -1178,14 +1167,15 @@ int ieee802_11_build_ap_params(struct hostapd_data *hapd,
 	tail_len += hostapd_eid_owe_trans_len(hapd);
 	tail_len += hostapd_eid_dpp_cc_len(hapd);
 
-	tailpos = tail = os_malloc(tail_len);
-	if (head == NULL || tail == NULL) {
-		wpa_printf(MSG_ERROR, "Failed to set beacon data");
-		os_free(head);
-		os_free(tail);
-		return -1;
-	}
-	tailend = tail + tail_len;
+	return tail_len;
+}
+
+static size_t __ieee802_11_build_bcn_head(struct hostapd_data *hapd,
+					  u8 *buf)
+{
+	struct ieee80211_mgmt *head = (struct ieee80211_mgmt *) buf;
+	u16 capab_info;
+	u8 *pos;
 
 	head->frame_control = IEEE80211_FC(WLAN_FC_TYPE_MGMT,
 					   WLAN_FC_STYPE_BEACON);
@@ -1224,9 +1214,22 @@ int ieee802_11_build_ap_params(struct hostapd_data *hapd,
 	/* DS Params */
 	pos = hostapd_eid_ds_params(hapd, pos);
 
-	head_len = pos - (u8 *) head;
+	return pos - (u8 *) head;
+}
 
-	tailpos = hostapd_eid_country(hapd, tailpos, tailend - tailpos);
+static size_t ieee802_11_build_bcn_head(struct hostapd_data *hapd,
+					u8 *head)
+{
+	return __ieee802_11_build_bcn_head(hapd, head);
+}
+
+static size_t __ieee802_11_build_bcn_tail(struct hostapd_data *hapd,
+					  u8 *tail, size_t tail_len)
+{
+	u8 *tailend, *tailpos, *csa_pos;
+
+	tailend = tail + tail_len;
+	tailpos = hostapd_eid_country(hapd, tail, tailend - tail);
 
 	/* Power Constraint element */
 	tailpos = hostapd_eid_pwr_constraint(hapd, tailpos);
@@ -1353,18 +1356,61 @@ int ieee802_11_build_ap_params(struct hostapd_data *hapd,
 		tailpos += wpabuf_len(hapd->conf->vendor_elements);
 	}
 
-	tail_len = tailpos > tail ? tailpos - tail : 0;
+	return tailpos > tail ? tailpos - tail : 0;
+}
+
+static size_t ieee802_11_build_bcn_tail(struct hostapd_data *hapd,
+					u8 *tail, size_t tail_len)
+{
+	return __ieee802_11_build_bcn_tail(hapd, tail, tail_len);
+}
+
+static int ieee802_11_build_beacon(struct hostapd_data *hapd,
+				   struct wpa_driver_ap_params *params)
+{
+	u8 *head = NULL, *tail = NULL, *resp = NULL;
+	size_t head_len = 0, tail_len = 0, resp_len = 0;
+
+#ifdef NEED_AP_MLME
+#define BEACON_HEAD_BUF_SIZE 256
+	head = os_zalloc(BEACON_HEAD_BUF_SIZE);
+	tail_len = ieee802_11_bcn_tail_len(hapd);
+
+	tail = os_malloc(tail_len);
+	if (head == NULL || tail == NULL) {
+		wpa_printf(MSG_ERROR, "Failed to set beacon data");
+		os_free(head);
+		os_free(tail);
+		return -1;
+	}
+
+	head_len = ieee802_11_build_bcn_head(hapd, head);
+	tail_len = ieee802_11_build_bcn_tail(hapd, tail, tail_len);
 
 	resp = hostapd_probe_resp_offloads(hapd, &resp_len);
 #endif /* NEED_AP_MLME */
 
-	os_memset(params, 0, sizeof(*params));
-	params->head = (u8 *) head;
+	params->head = head;
 	params->head_len = head_len;
 	params->tail = tail;
 	params->tail_len = tail_len;
 	params->proberesp = resp;
 	params->proberesp_len = resp_len;
+
+	return 0;
+}
+
+int ieee802_11_build_ap_params(struct hostapd_data *hapd,
+			       struct wpa_driver_ap_params *params)
+{
+	int err;
+
+	os_memset(params, 0, sizeof(*params));
+
+	err = ieee802_11_build_beacon(hapd, params);
+	if (err)
+		return err;
+
 	params->dtim_period = hapd->conf->dtim_period;
 	params->beacon_int = hapd->iconf->beacon_int;
 	params->basic_rates = hapd->iface->basic_rates;
