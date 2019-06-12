@@ -655,6 +655,13 @@ static u8 * hostapd_gen_probe_resp(struct hostapd_data *hapd,
 		pos += wpabuf_len(hapd->conf->vendor_elements);
 	}
 
+#ifdef CONFIG_IEEE80211AH
+	if (hapd->conf->s1g) {
+		pos = hostapd_eid_s1g_capab(hapd, pos);
+		pos = hostapd_eid_s1g_oper(hapd, pos);
+	}
+#endif
+
 	*resp_len = pos - (u8 *) resp;
 	return (u8 *) resp;
 }
