@@ -589,6 +589,13 @@ struct hostapd_iface {
 
 	/* Previous WMM element information */
 	struct hostapd_wmm_ac_params prev_wmm[WMM_AC_NUM];
+
+#ifdef CONFIG_IEEE80211AH
+	/* primary and operating channel widths (in MHz) for s1g, derived on
+	 * init */
+	u8 s1g_primary_width;
+	u8 s1g_oper_width;
+#endif /* CONFIG_IEEE80211AH */
 };
 
 /* hostapd.c */

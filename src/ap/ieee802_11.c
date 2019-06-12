@@ -242,18 +242,29 @@ u8 * hostapd_eid_s1g_capab(struct hostapd_data *hapd, u8 *eid)
 u8 * hostapd_eid_s1g_oper(struct hostapd_data *hapd, u8 *eid)
 {
 	u8 *pos = eid;
+	u8 s1g_chanwidth = 0;
 
 	*pos++ = WLAN_EID_S1G_OPERATION;
 	*pos++ = 6;
 
-	/* Channel Width */
-	*pos++ = 0x1; /* 1MHz */
+	/* Primary Channel Width */
+	if (hapd->iface->s1g_primary_width == 1)
+		s1g_chanwidth |= 1;
+	/* Operating Channel Width */
+	s1g_chanwidth |= (hapd->iface->s1g_oper_width - 1) << 1;
+	/* location of 1MHz primary within 2 MHz operation */
+	if (hapd->iface->s1g_primary_width != hapd->iface->s1g_oper_width &&
+	    hapd->iconf->channel > hapd->iconf->s1g_oper_channel)
+		s1g_chanwidth |= 1 << 5;
+	*pos++ = s1g_chanwidth;
+
 	/* Operating Class */
-	*pos++ = 1; /* USA */
+	/* TODO: this is wrong for > 2MHz, see Table E-4a */
+	*pos++ = hapd->iface->s1g_oper_width;
 	/* Primary Channel */
 	*pos++ = hapd->iconf->channel;
 	/* Channel Center Frequency */
-	*pos++ = hapd->iconf->channel;
+	*pos++ = hapd->iconf->s1g_oper_channel;
 	/* TODO: Basic S1G-MCS and NSS Set */
 	os_memset(pos, 0, 2);
 	pos += 2;

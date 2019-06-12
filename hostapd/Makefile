@@ -338,6 +338,7 @@ endif
 ifdef CONFIG_IEEE80211AH
 CONFIG_WNM=y
 CFLAGS += -DCONFIG_IEEE80211AH
+OBJS += ../src/ap/ieee802_11_s1g.o
 endif
 
 ifdef CONFIG_WNM

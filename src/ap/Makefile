@@ -43,6 +43,7 @@ LIB_OBJS= \
 	ieee802_11_auth.o \
 	ieee802_11.o \
 	ieee802_11_ht.o \
+	ieee802_11_s1g.o \
 	ieee802_11_shared.o \
 	ieee802_11_vht.o \
 	ieee802_1x.o \

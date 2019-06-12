@@ -1542,6 +1542,10 @@ static void phy_info_freq(struct hostapd_hw_modes *mode,
 		chan->allowed_bw &= ~HOSTAPD_CHAN_WIDTH_80;
 	if (tb_freq[NL80211_FREQUENCY_ATTR_NO_160MHZ])
 		chan->allowed_bw &= ~HOSTAPD_CHAN_WIDTH_160;
+	if (!tb_freq[NL80211_FREQUENCY_ATTR_1MHZ])
+		chan->allowed_bw &= ~HOSTAPD_CHAN_WIDTH_1;
+	if (!tb_freq[NL80211_FREQUENCY_ATTR_2MHZ])
+		chan->allowed_bw &= ~HOSTAPD_CHAN_WIDTH_2;
 
 	if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]) {
 		enum nl80211_dfs_state state =

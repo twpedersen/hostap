@@ -1979,6 +1979,15 @@ static int hostapd_setup_interface_complete_sync(struct hostapd_iface *iface,
 		goto fail;
 
 	wpa_printf(MSG_DEBUG, "Completing interface initialization");
+
+#ifdef CONFIG_IEEE80211AH
+	/* calculate the S1G operating bandwidth before setting the channel */
+	if (hostapd_s1g_init(hapd)) {
+		wpa_printf(MSG_ERROR, "S1G init failed");
+		return -1;
+	}
+#endif /* CONFIG_IEEE80211AH */
+
 	if (iface->freq) {
 #ifdef NEED_AP_MLME
 		int res;
