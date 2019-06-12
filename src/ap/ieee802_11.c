@@ -4246,7 +4246,6 @@ void fils_hlp_timeout(void *eloop_ctx, void *eloop_data)
 
 #endif /* CONFIG_FILS */
 
-
 static void handle_assoc(struct hostapd_data *hapd,
 			 const struct ieee80211_mgmt *mgmt, size_t len,
 			 int reassoc, int rssi)
@@ -4295,8 +4294,11 @@ static void handle_assoc(struct hostapd_data *hapd,
 
 	if (reassoc) {
 		capab_info = le_to_host16(mgmt->u.reassoc_req.capab_info);
-		listen_interval = le_to_host16(
-			mgmt->u.reassoc_req.listen_interval);
+		listen_interval =
+			le_to_host16(mgmt->u.reassoc_req.listen_interval);
+		if (hapd->conf->s1g)
+			listen_interval =
+				ieee80211_decode_usf(listen_interval);
 		wpa_printf(MSG_DEBUG, "reassociation request: STA=" MACSTR
 			   " capab_info=0x%02x listen_interval=%d current_ap="
 			   MACSTR " seq_ctrl=0x%x%s",
@@ -4307,8 +4309,11 @@ static void handle_assoc(struct hostapd_data *hapd,
 		pos = mgmt->u.reassoc_req.variable;
 	} else {
 		capab_info = le_to_host16(mgmt->u.assoc_req.capab_info);
-		listen_interval = le_to_host16(
-			mgmt->u.assoc_req.listen_interval);
+		listen_interval =
+			le_to_host16(mgmt->u.assoc_req.listen_interval);
+		if (hapd->conf->s1g)
+			listen_interval =
+				ieee80211_decode_usf(listen_interval);
 		wpa_printf(MSG_DEBUG, "association request: STA=" MACSTR
 			   " capab_info=0x%02x listen_interval=%d "
 			   "seq_ctrl=0x%x%s",

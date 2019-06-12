@@ -2477,6 +2477,9 @@ static void wnm_process_assoc_resp(struct wpa_supplicant *wpa_s,
 	if (elems.bss_max_idle_period) {
 		unsigned int msec;
 		wpa_s->sme.bss_max_idle_period =
+			!!elems.s1g_capab ?
+			ieee80211_decode_usf(
+				WPA_GET_LE16(elems.bss_max_idle_period)) :
 			WPA_GET_LE16(elems.bss_max_idle_period);
 		wpa_printf(MSG_DEBUG, "WNM: BSS Max Idle Period: %u (* 1000 "
 			   "TU)%s", wpa_s->sme.bss_max_idle_period,

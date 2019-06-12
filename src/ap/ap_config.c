@@ -93,6 +93,7 @@ void hostapd_config_defaults_bss(struct hostapd_bss_config *bss)
 	bss->ap_max_inactivity = AP_MAX_INACTIVITY;
 	bss->eapol_version = EAPOL_VERSION;
 
+	/* TODO: for S1G this is max 163840000 */
 	bss->max_listen_interval = 65535;
 
 	bss->pwd_group = 19; /* ECC: GF(p=256) */

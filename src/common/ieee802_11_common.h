@@ -270,6 +270,8 @@ int ieee802_11_parse_candidate_list(const char *pos, u8 *nei_rep,
 int ieee802_11_ext_capab(const u8 *ie, unsigned int capab);
 int op_class_to_bandwidth(u8 op_class);
 int op_class_to_ch_width(u8 op_class);
+int ieee80211_decode_usf(u16 val);
+u16 ieee80211_encode_usf(int val);
 
 /* element iteration helpers */
 #define for_each_element(_elem, _data, _datalen)			\

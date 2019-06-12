@@ -1242,6 +1242,14 @@ struct ieee80211_ampe_ie {
 
 #define S1G_CAPAB_B9_LINK_ADAPT_PER_CONTROL_RESPONSE BIT(0)
 
+#define LISTEN_INT_USF_MASK (BIT(14) | BIT(15))
+#define LISTEN_INT_USF_SHIFT 14
+
+
+#define IEEE80211_MAX_USF 3
+#define IEEE80211_MAX_UI ((1 << 14) - 1)
+static const int listen_int_usf[] = { 1, 10, 1000, 10000 };
+
 /* HT Capabilities Info field within HT Capabilities element */
 #define HT_CAP_INFO_LDPC_CODING_CAP		((u16) BIT(0))
 #define HT_CAP_INFO_SUPP_CHANNEL_WIDTH_SET	((u16) BIT(1))

@@ -741,26 +741,38 @@ int hostapd_update_time_adv(struct hostapd_data *hapd)
 	return 0;
 }
 
+#if defined(CONFIG_WNM_AP)
+static void hostapd_eid_add_listen_int(struct hostapd_data *hapd, u8 *pos)
+{
+	int val;
+	val = hapd->conf->ap_max_inactivity;
+	if (!hapd->conf->s1g && val > 68000)
+		val = 68000;
+
+	/* units of 1000 TUs */
+	val *= 1000;
+	val /= 1024;
+	if (val == 0)
+		val = 1;
+
+	if (!hapd->conf->s1g) {
+		if (val > 65535)
+			val = 65535;
+	} else
+		val = ieee80211_encode_usf(val);
+	WPA_PUT_LE16(pos, val);
+}
+#endif
 
 u8 * hostapd_eid_bss_max_idle_period(struct hostapd_data *hapd, u8 *eid)
 {
 	u8 *pos = eid;
 
-#ifdef CONFIG_WNM_AP
+#if defined(CONFIG_WNM_AP)
 	if (hapd->conf->ap_max_inactivity > 0) {
-		unsigned int val;
 		*pos++ = WLAN_EID_BSS_MAX_IDLE_PERIOD;
 		*pos++ = 3;
-		val = hapd->conf->ap_max_inactivity;
-		if (val > 68000)
-			val = 68000;
-		val *= 1000;
-		val /= 1024;
-		if (val == 0)
-			val = 1;
-		if (val > 65535)
-			val = 65535;
-		WPA_PUT_LE16(pos, val);
+		hostapd_eid_add_listen_int(hapd, pos);
 		pos += 2;
 		*pos++ = 0x00; /* TODO: Protected Keep-Alive Required */
 	}

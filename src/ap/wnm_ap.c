@@ -70,6 +70,9 @@ static int ieee802_11_send_wnmsleep_resp(struct hostapd_data *hapd,
 		return -EINVAL;
 	}
 
+	if (hapd->conf->s1g)
+		intval = ieee80211_encode_usf(intval);
+
 	/* WNM-Sleep Mode IE */
 	os_memset(&wnmsleep_ie, 0, sizeof(struct wnm_sleep_element));
 	wnmsleep_ie_len = sizeof(struct wnm_sleep_element);
@@ -263,6 +266,7 @@ static void ieee802_11_rx_wnmsleep_req(struct hostapd_data *hapd,
 	u8 *tfsreq_ie_start = NULL;
 	u8 *tfsreq_ie_end = NULL;
 	u16 tfsreq_ie_len = 0;
+	int intval;
 #ifdef CONFIG_OCV
 	struct sta_info *sta;
 	const u8 *oci_ie = NULL;
@@ -347,9 +351,11 @@ static void ieee802_11_rx_wnmsleep_req(struct hostapd_data *hapd,
 			wpa_printf(MSG_DEBUG, "Fail to set TFS Req IE");
 	}
 
+	intval = le_to_host16(wnmsleep_ie->intval);
 	ieee802_11_send_wnmsleep_resp(hapd, addr, dialog_token,
 				      wnmsleep_ie->action_type,
-				      le_to_host16(wnmsleep_ie->intval));
+				      hapd->conf->s1g ?
+				      ieee80211_decode_usf(intval) : intval);
 
 	if (wnmsleep_ie->action_type == WNM_SLEEP_MODE_EXIT) {
 		/* clear the tfs after sending the resp frame */

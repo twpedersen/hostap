@@ -2633,3 +2633,34 @@ struct wpabuf * ieee802_11_defrag(struct ieee802_11_elems *elems,
 
 	return ieee802_11_defrag_data(elems, eid, eid_ext, data, len);
 }
+
+int ieee80211_decode_usf(u16 val)
+{
+	u16 usf;
+
+	usf = (val & LISTEN_INT_USF_MASK) >> LISTEN_INT_USF_SHIFT;
+	val &= ~LISTEN_INT_USF_MASK;
+
+	return val * listen_int_usf[usf];
+}
+
+u16 ieee80211_encode_usf(int val)
+{
+	/* S1G, 802.11ah-2016 9.4.2.79 */
+	u16 ui, usf = 0;
+
+	/* find greatest USF */
+	while (usf < IEEE80211_MAX_USF) {
+		if (val % listen_int_usf[usf + 1])
+			break;
+		usf += 1;
+	}
+	ui = val / listen_int_usf[usf];
+
+	/* error if there is a remainder. Should've been checked by user */
+	if (ui > IEEE80211_MAX_UI) {
+		wpa_printf(MSG_ERROR, "%d exceeded max UI, truncating", ui);
+		ui &= (1 << LISTEN_INT_USF_SHIFT) - 1;
+	}
+	return usf << LISTEN_INT_USF_SHIFT | ui;
+}

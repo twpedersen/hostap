@@ -71,6 +71,9 @@ int ieee802_11_send_wnmsleep_req(struct wpa_supplicant *wpa_s,
 		   action == 0 ? "enter" : "exit",
 		   MAC2STR(wpa_s->bssid));
 
+	if (wpa_s->current_bss && wpa_s->current_bss->s1g)
+		intval = ieee80211_encode_usf(intval);
+
 	/* WNM-Sleep Mode IE */
 	wnmsleep_ie_len = sizeof(struct wnm_sleep_element);
 	wnmsleep_ie = os_zalloc(sizeof(struct wnm_sleep_element));
@@ -388,7 +391,11 @@ static void ieee802_11_rx_wnmsleep_resp(struct wpa_supplicant *wpa_s,
 	    wnmsleep_ie->status == WNM_STATUS_SLEEP_EXIT_ACCEPT_GTK_UPDATE) {
 		wpa_printf(MSG_DEBUG, "Successfully recv WNM-Sleep Response "
 			   "frame (action=%d, intval=%d)",
-			   wnmsleep_ie->action_type, wnmsleep_ie->intval);
+			   wnmsleep_ie->action_type,
+			   wpa_s->current_bss->s1g ?
+			   ieee80211_decode_usf(
+					le_to_host16(wnmsleep_ie->intval)) :
+			   le_to_host16(wnmsleep_ie->intval));
 		if (wnmsleep_ie->action_type == WNM_SLEEP_MODE_ENTER) {
 			wnm_sleep_mode_enter_success(wpa_s, tfsresp_ie_start,
 						     tfsresp_ie_end);
