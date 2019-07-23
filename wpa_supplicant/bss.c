@@ -46,6 +46,16 @@ static void wpa_bss_set_hessid(struct wpa_bss *bss)
 #endif /* CONFIG_INTERWORKING */
 }
 
+static void wpa_bss_set_s1g(struct wpa_bss *bss)
+{
+#ifdef CONFIG_IEEE80211AH
+	const u8 *ie = wpa_bss_get_ie(bss, WLAN_EID_S1G_CAPABILITIES);
+	if (!ie)
+		bss->s1g = 0;
+	else
+		bss->s1g = 1;
+#endif /* CONFIG_IEEE80211AH */
+}
 
 /**
  * wpa_bss_anqp_alloc - Allocate ANQP data structure for a BSS entry
@@ -445,6 +455,7 @@ static struct wpa_bss * wpa_bss_add(struct wpa_supplicant *wpa_s,
 	bss->beacon_ie_len = res->beacon_ie_len;
 	os_memcpy(bss + 1, res + 1, res->ie_len + res->beacon_ie_len);
 	wpa_bss_set_hessid(bss);
+	wpa_bss_set_s1g(bss);
 
 	if (wpa_s->num_bss + 1 > wpa_s->conf->bss_max_count &&
 	    wpa_bss_remove_oldest(wpa_s) != 0) {

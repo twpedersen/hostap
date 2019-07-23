@@ -105,6 +105,8 @@ struct wpa_bss {
 	int snr;
 	/** ANQP data */
 	struct wpa_bss_anqp *anqp;
+	/** this BSS is an S1G BSS */
+	int s1g;
 	/** Length of the following IE field in octets (from Probe Response) */
 	size_t ie_len;
 	/** Length of the following Beacon IE field in octets */
