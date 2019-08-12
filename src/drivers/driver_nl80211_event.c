@@ -208,8 +208,8 @@ static void nl80211_parse_wmm_params(struct nlattr *wmm_attr,
 
 
 static void mlme_event_assoc(struct wpa_driver_nl80211_data *drv,
-			     const u8 *frame, size_t len, struct nlattr *wmm,
-			     struct nlattr *req_ie)
+			     u32 frequency, const u8 *frame, size_t len,
+			     struct nlattr *wmm, struct nlattr *req_ie)
 {
 	const struct ieee80211_mgmt *mgmt;
 	union wpa_event_data event;
@@ -259,9 +259,18 @@ static void mlme_event_assoc(struct wpa_driver_nl80211_data *drv,
 	event.assoc_info.resp_frame = frame;
 	event.assoc_info.resp_frame_len = len;
 	if (len > 24 + sizeof(mgmt->u.assoc_resp)) {
-		event.assoc_info.resp_ies = (u8 *) mgmt->u.assoc_resp.variable;
-		event.assoc_info.resp_ies_len =
-			len - 24 - sizeof(mgmt->u.assoc_resp);
+		/* TODO: utility function */
+		if (frequency && frequency < KHZ(1000)) {
+			event.assoc_info.resp_ies =
+				(u8 *) mgmt->u.assoc_resp_s1g.variable;
+			event.assoc_info.resp_ies_len =
+				len - 24 - sizeof(mgmt->u.assoc_resp_s1g);
+		} else {
+			event.assoc_info.resp_ies =
+				(u8 *) mgmt->u.assoc_resp.variable;
+			event.assoc_info.resp_ies_len =
+				len - 24 - sizeof(mgmt->u.assoc_resp);
+		}
 	}
 
 	if (req_ie) {
@@ -969,7 +978,7 @@ static void mlme_event(struct i802_bss *bss,
 		mlme_event_auth(drv, nla_data(frame), nla_len(frame));
 		break;
 	case NL80211_CMD_ASSOCIATE:
-		mlme_event_assoc(drv, nla_data(frame), nla_len(frame), wmm,
+		mlme_event_assoc(drv, frequency, nla_data(frame), nla_len(frame), wmm,
 				 req_ie);
 		break;
 	case NL80211_CMD_DEAUTHENTICATE:
