@@ -22,6 +22,7 @@
 #include "hs20.h"
 #include "wpa_auth.h"
 #include "ap_drv_ops.h"
+#include "hw_features.h"
 
 
 u32 hostapd_sta_flags_to_drv(u32 flags)
@@ -551,6 +552,7 @@ int hostapd_set_freq(struct hostapd_data *hapd, enum hostapd_hw_mode mode,
 		     int sec_channel_offset, int oper_chwidth,
 		     int center_segment0, int center_segment1)
 {
+	struct hostapd_config *iconf = hapd->iface->conf;
 	struct hostapd_freq_params data;
 	struct hostapd_hw_modes *cmode = hapd->iface->current_mode;
 
@@ -563,6 +565,24 @@ int hostapd_set_freq(struct hostapd_data *hapd, enum hostapd_hw_mode mode,
 				    cmode ?
 				    &cmode->he_capab[IEEE80211_MODE_AP] : NULL))
 		return -1;
+
+	if (iconf->hw_mode == HOSTAPD_MODE_IEEE80211AH) {
+		/* XXX: should be using hostapd_set_freq_params(), but it is
+		 * currently a dumpster fire. Open code here for now.
+		 */
+
+		/* if operating is not equal to primary, center_freq1 is an
+		 * integer MHz and we can include it. Otherwise we'll have
+		 * trouble with the units and it is redundant anyway.
+		 */
+		if (iconf->s1g_oper_channel != iconf->channel)
+			data.center_freq1 = MHZ(hostapd_hw_get_freq(hapd,
+						    iconf->s1g_oper_channel));
+		else
+			data.center_freq1 = 0;
+		data.bandwidth = hapd->iface->s1g_oper_width;
+		data.ctl_bandwidth = hapd->iface->s1g_primary_width;
+	}
 
 	if (hapd->driver == NULL)
 		return 0;

@@ -778,6 +778,12 @@ struct hostapd_freq_params {
 	 * for IEEE 802.11ay EDMG configuration.
 	 */
 	struct ieee80211_edmg_config edmg;
+
+	/**
+	 * ctl_bandwidth - Channel bandwidth in MHz of the control (primary)
+	 * channel
+	 */
+	int ctl_bandwidth;
 };
 
 /**

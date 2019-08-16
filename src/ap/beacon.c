@@ -32,6 +32,7 @@
 #include "dfs.h"
 #include "taxonomy.h"
 #include "ieee802_11_auth.h"
+#include "hw_features.h"
 
 
 #ifdef NEED_AP_MLME
@@ -1654,6 +1655,24 @@ int ieee802_11_set_beacon(struct hostapd_data *hapd)
 				    cmode->vht_capab,
 				    &cmode->he_capab[IEEE80211_MODE_AP]) == 0)
 		params.freq = &freq;
+
+	if (iconf->hw_mode == HOSTAPD_MODE_IEEE80211AH) {
+		/* XXX: should be using hostapd_set_freq_params(), but it is
+		 * currently a dumpster fire. Open code here for now.
+		 */
+
+		/* if operating is not equal to primary, center_freq1 is an
+		 * integer MHz and we can include it. Otherwise we'll have
+		 * trouble with the units and it is redundant anyway.
+		 */
+		if (iconf->s1g_oper_channel != iconf->channel)
+			freq.center_freq1 = MHZ(hostapd_hw_get_freq(hapd,
+							iconf->s1g_oper_channel));
+		else
+			freq.center_freq1 = 0;
+		freq.bandwidth = iface->s1g_oper_width;
+		freq.ctl_bandwidth = iface->s1g_primary_width;
+	}
 
 	res = hostapd_drv_set_ap(hapd, &params);
 	hostapd_free_ap_extra_ies(hapd, beacon, proberesp, assocresp);
