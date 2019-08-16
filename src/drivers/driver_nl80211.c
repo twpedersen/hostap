@@ -4542,6 +4542,30 @@ fail:
 	return ret;
 }
 
+static int get_nl80211_width(int bandwidth, int center_freq2)
+{
+	switch (bandwidth) {
+	case 1:
+		return NL80211_CHAN_WIDTH_1;
+	case 2:
+		return NL80211_CHAN_WIDTH_2;
+	case 4:
+		return NL80211_CHAN_WIDTH_4;
+	case 20:
+		return NL80211_CHAN_WIDTH_20;
+	case 40:
+		return NL80211_CHAN_WIDTH_40;
+	case 80:
+		if (center_freq2)
+			return NL80211_CHAN_WIDTH_80P80;
+		else
+			return NL80211_CHAN_WIDTH_80;
+	case 160:
+		return NL80211_CHAN_WIDTH_160;
+	default:
+		return -EINVAL;
+	}
+}
 
 static int nl80211_put_freq_params(struct nl_msg *msg, const u64 flags,
 				   const struct hostapd_freq_params *freq)
@@ -4549,6 +4573,7 @@ static int nl80211_put_freq_params(struct nl_msg *msg, const u64 flags,
 	enum hostapd_hw_mode hw_mode;
 	int is_24ghz;
 	u8 channel;
+	int cw;
 
 	wpa_printf(MSG_DEBUG, "  * freq=%g", PR_KHZ(freq->freq));
 	if (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ, MHZ(freq->freq)))
@@ -4564,7 +4589,26 @@ static int nl80211_put_freq_params(struct nl_msg *msg, const u64 flags,
 	is_24ghz = hw_mode == HOSTAPD_MODE_IEEE80211G ||
 		hw_mode == HOSTAPD_MODE_IEEE80211B;
 
-	if (freq->vht_enabled || (freq->he_enabled && !is_24ghz)) {
+	if (freq->mode == HOSTAPD_MODE_IEEE80211AH) {
+		wpa_printf(MSG_DEBUG, "  * bandwidth=%d", freq->bandwidth);
+
+		cw = get_nl80211_width(freq->bandwidth, 0);
+		if (cw < 0)
+			return -EINVAL;
+		wpa_printf(MSG_DEBUG, "  * channel_width=%d", cw);
+		nla_put_u32(msg, NL80211_ATTR_CHANNEL_WIDTH, cw);
+
+		/* HACK: center_freq1 is units of MHz. If not specified it was
+		 * KHz and will be equal to the freq->freq. This works for the
+		 * US, but eventually we should decouple them.
+		 */
+		if (freq->center_freq1) {
+			wpa_printf(MSG_DEBUG, "  * center_freq1=%d",
+				   freq->center_freq1);
+			nla_put_u32(msg, NL80211_ATTR_CENTER_FREQ1,
+				    freq->center_freq1);
+		}
+	} else if (freq->vht_enabled || (freq->he_enabled && !is_24ghz)) {
 		enum nl80211_chan_width cw;
 
 		wpa_printf(MSG_DEBUG, "  * bandwidth=%d", freq->bandwidth);
@@ -7760,7 +7804,7 @@ static int nl80211_send_frame_cmd(struct i802_bss *bss,
 		/* If we don't specify channel bandwidth, the kernel defaults
 		 * to 20MHz, which is obviously not valid for s1g. Assume this
 		 * frame is being sent on a primary channel which is either 1
-		 * or 2MHz. 1MHz channels are all odd.
+		 * or 2MHz. 1MHz channels are all odd (in the US).
 		 */
 		if (nla_put_u32(msg, NL80211_ATTR_CHANNEL_WIDTH,
 				     channel & 0x1 ? NL80211_CHAN_WIDTH_1 :

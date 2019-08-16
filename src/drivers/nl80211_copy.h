@@ -5869,6 +5869,7 @@ enum nl80211_feature_flags {
  *
  * @NL80211_EXT_FEATURE_DEL_IBSS_STA: The driver supports removing stations
  *      in IBSS mode, essentially by dropping their state.
+ * @NL80211_EXT_FEATURE_NDP_PROBE: Driver supports sending NDP Probe Request.
  *
  * @NL80211_EXT_FEATURE_MULTICAST_REGISTRATIONS: management frame registrations
  *	are possible for multicast frames and those will be reported properly.
