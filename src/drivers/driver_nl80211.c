@@ -7730,6 +7730,7 @@ static int nl80211_send_frame_cmd(struct i802_bss *bss,
 {
 	struct wpa_driver_nl80211_data *drv = bss->drv;
 	struct nl_msg *msg;
+	u8 channel;
 	u64 cookie;
 	int ret = -1;
 
@@ -7753,6 +7754,19 @@ static int nl80211_send_frame_cmd(struct i802_bss *bss,
 				 csa_offs_len * sizeof(u16), csa_offs)) ||
 	    nla_put(msg, NL80211_ATTR_FRAME, buf_len, buf))
 		goto fail;
+
+	if (ieee80211_freq_to_chan(freq, &channel) ==
+					HOSTAPD_MODE_IEEE80211AH) {
+		/* If we don't specify channel bandwidth, the kernel defaults
+		 * to 20MHz, which is obviously not valid for s1g. Assume this
+		 * frame is being sent on a primary channel which is either 1
+		 * or 2MHz. 1MHz channels are all odd.
+		 */
+		if (nla_put_u32(msg, NL80211_ATTR_CHANNEL_WIDTH,
+				     channel & 0x1 ? NL80211_CHAN_WIDTH_1 :
+				     NL80211_CHAN_WIDTH_2))
+			goto fail;
+	}
 
 	cookie = 0;
 	ret = send_and_recv_msgs(drv, msg, cookie_handler, &cookie);
