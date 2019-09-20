@@ -989,6 +989,7 @@ struct hostapd_config {
 	u8 ht40_plus_minus_allowed;
 
 	u8 s1g_oper_channel;
+	u8 s1g_capab[S1G_CAPAB_OCTETS];
 
 	/* Use driver-generated interface addresses when adding multiple BSSs */
 	u8 use_driver_iface_addr;

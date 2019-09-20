@@ -1258,6 +1258,9 @@ struct ieee80211_s1g_capabilities {
 
 #define S1G_CAPAB_B9_LINK_ADAPT_PER_CONTROL_RESPONSE BIT(0)
 
+#define S1G_CAPAB_OCTETS 10
+#define S1G_NCS_MCS_OCTETS 5
+
 #define LISTEN_INT_USF_MASK (BIT(14) | BIT(15))
 #define LISTEN_INT_USF_SHIFT 14
 

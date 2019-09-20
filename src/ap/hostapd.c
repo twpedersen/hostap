@@ -275,6 +275,8 @@ int hostapd_reload_config(struct hostapd_iface *iface)
 		hapd->iconf->ieee80211ac = oldconf->ieee80211ac;
 		hapd->iconf->ht_capab = oldconf->ht_capab;
 		hapd->iconf->vht_capab = oldconf->vht_capab;
+		memcpy(hapd->iconf->s1g_capab, oldconf->s1g_capab,
+		       sizeof(oldconf->s1g_capab));
 		hostapd_set_oper_chwidth(hapd->iconf,
 					 hostapd_get_oper_chwidth(oldconf));
 		hostapd_set_oper_centr_freq_seg0_idx(

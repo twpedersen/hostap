@@ -201,24 +201,15 @@ u8 * hostapd_eid_ext_supp_rates(struct hostapd_data *hapd, u8 *eid)
 #ifdef CONFIG_IEEE80211AH
 u8 * hostapd_eid_s1g_capab(struct hostapd_data *hapd, u8 *eid)
 {
+	struct hostapd_config *conf = hapd->iconf;
 	u8 *pos = eid;
 
 	*pos++ = WLAN_EID_S1G_CAPABILITIES;
-	*pos++ = 15;
-
-	/* TODO: get these from hardware */
+	*pos++ = sizeof(conf->s1g_capab) + S1G_MCS_NSS_OCTETS;
 
 	/* S1G Capabilities Information */
-	*pos++ = S1G_CAPAB_B0_SGI_1MHZ | S1G_CAPAB_B0_SGI_2MHZ;
-	*pos++ = 0; /* 1 */
-	*pos++ = 0; /* 2 */
-	*pos++ = S1G_CAPAB_B3_MAX_MPDU_LEN;
-	*pos++ = 0; /* 4 */
-	*pos++ = 0; /* 5 */
-	*pos++ = 0; /* 6 */
-	*pos++ = S1G_CAPAB_B7_DUP_1MHZ;
-	*pos++ = 0; /* 8 */
-	*pos++ = 0; /* 9 */
+	memcpy(pos, conf->s1g_capab, sizeof(conf->s1g_capab));
+	pos += sizeof(conf->s1g_capab);
 
 	/* Supported S1G-MCS and NSS Set */
 	/* RX S1G MCS Map */

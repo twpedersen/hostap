@@ -336,6 +336,26 @@ enum wpa_states {
 
 
 /**
+ * enum s1g_bss_type - S1G BSS type and STA type
+ */
+enum s1g_bss_type {
+	S1G_BSS_TYPE_MIXED = 0,
+	S1G_BSS_TYPE_SENSOR = 1,
+	S1G_BSS_TYPE_NON_SENSOR = 2,
+	NUM_S1G_BSS_TYPES,
+};
+
+/**
+ * enum s1g_supp_chwidth - S1G supported channel width type
+ */
+enum s1g_supp_chwidth {
+	S1G_SUPP_CHWIDTH_1_2 = 0,
+	S1G_SUPP_CHWIDTH_1_2_4 = 1,
+	S1G_SUPP_CHWIDTH_1_2_4_8 = 2,
+	S1G_SUPP_CHWIDTH_1_2_4_8_16 = 3,
+};
+
+/**
  * enum mfp_options - Management frame protection (IEEE 802.11w) options
  */
 enum mfp_options {

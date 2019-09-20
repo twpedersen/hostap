@@ -1194,6 +1194,36 @@ static int hostapd_config_vht_capab(struct hostapd_config *conf,
 }
 #endif /* CONFIG_IEEE80211AC */
 
+#ifdef CONFIG_IEEE80211AH
+static int hostapd_config_s1g_capab(struct hostapd_config *conf,
+				    const char *capab)
+{
+	if (os_strstr(capab, "[SGI-1MHZ]"))
+		conf->s1g_capab[0] |= S1G_CAPAB_B0_SGI_1MHZ;
+	if (os_strstr(capab, "[SGI-2MHZ]"))
+		conf->s1g_capab[0] |= S1G_CAPAB_B0_SGI_2MHZ;
+	if (os_strstr(capab, "[SGI-4MHZ]"))
+		conf->s1g_capab[0] |= S1G_CAPAB_B0_SGI_4MHZ;
+	if (os_strstr(capab, "[SGI-8MHZ]"))
+		conf->s1g_capab[0] |= S1G_CAPAB_B0_SGI_8MHZ;
+	if (os_strstr(capab, "[SGI-16MHZ]"))
+		conf->s1g_capab[0] |= S1G_CAPAB_B0_SGI_16MHZ;
+	if (os_strstr(capab, "[S1G-1-2-4MHZ]"))
+		conf->s1g_capab[0] |= SM(S1G_CAPAB_B0_SUPP_CH_WIDTH,
+					 S1G_SUPP_CHWIDTH_1_2_4);
+	if (os_strstr(capab, "[BSS-TYPE-SENSOR]")) {
+		conf->s1g_capab[4] |= ((S1G_BSS_TYPE_SENSOR <<
+				        S1G_CAPAB_B4_STA_TYPE_SHIFT) |
+				       S1G_CAPAB_B4_NON_TIM);
+		conf->s1g_capab[8] |= S1G_CAPAB_B8_PV1_FRAME;
+	} else if (os_strstr(capab, "[BSS-TYPE-NON-SENSOR]"))
+		conf->s1g_capab[4] |= (S1G_BSS_TYPE_NON_SENSOR <<
+				       S1G_CAPAB_B4_STA_TYPE_SHIFT);
+	if (os_strstr(capab, "[DUP-1MHZ]"))
+		conf->s1g_capab[7] |= S1G_CAPAB_B7_DUP_1MHZ;
+	return 0;
+}
+#endif
 
 #ifdef CONFIG_IEEE80211AX
 
@@ -3150,6 +3180,14 @@ static int hostapd_config_fill(struct hostapd_config *conf,
 			return 1;
 		}
 		conf->beacon_int = val;
+#ifdef CONFIG_IEEE80211AH
+	} else if (os_strcmp(buf, "s1g_capab") == 0) {
+		if (hostapd_config_s1g_capab(conf, pos) < 0) {
+			wpa_printf(MSG_ERROR, "Line %d: invalid s1g_capab",
+				   line);
+			return 1;
+		}
+#endif
 #ifdef CONFIG_ACS
 	} else if (os_strcmp(buf, "acs_num_scans") == 0) {
 		int val = atoi(pos);
