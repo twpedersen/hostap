@@ -18,6 +18,7 @@
 /* STA flags */
 #define WLAN_STA_AUTH BIT(0)
 #define WLAN_STA_ASSOC BIT(1)
+#define WLAN_STA_S1G BIT(2)
 #define WLAN_STA_AUTHORIZED BIT(5)
 #define WLAN_STA_PENDING_POLL BIT(6) /* pending activity poll not ACKed */
 #define WLAN_STA_SHORT_PREAMBLE BIT(7)
@@ -168,6 +169,7 @@ struct sta_info {
 
 	struct ieee80211_ht_capabilities *ht_capabilities;
 	struct ieee80211_vht_capabilities *vht_capabilities;
+	struct ieee80211_s1g_capabilities *s1g_capabilities;
 	struct ieee80211_vht_operation *vht_operation;
 	u8 vht_opmode;
 	struct ieee80211_he_capabilities *he_capab;

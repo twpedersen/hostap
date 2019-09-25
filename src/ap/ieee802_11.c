@@ -3339,6 +3339,12 @@ static int check_assoc_ies(struct hostapd_data *hapd, struct sta_info *sta,
 	}
 #endif /* CONFIG_IEEE80211AX */
 
+#ifdef CONFIG_IEEE80211AH
+	resp = copy_sta_s1g_capab(hapd, sta, elems.s1g_capab);
+	if (resp != WLAN_STATUS_SUCCESS)
+		return resp;
+#endif /* CONFIG_IEEE80211AH */
+
 #ifdef CONFIG_P2P
 	if (elems.p2p) {
 		wpabuf_free(sta->p2p_ie);
@@ -3717,6 +3723,7 @@ static int add_associated_sta(struct hostapd_data *hapd,
 	struct ieee80211_ht_capabilities ht_cap;
 	struct ieee80211_vht_capabilities vht_cap;
 	struct ieee80211_he_capabilities he_cap;
+	struct ieee80211_s1g_capabilities s1g_cap;
 	int set = 1;
 
 	/*
@@ -3773,6 +3780,10 @@ static int add_associated_sta(struct hostapd_data *hapd,
 				     sta->he_capab_len);
 	}
 #endif /* CONFIG_IEEE80211AX */
+#ifdef CONFIG_IEEE80211AH
+	if (sta->flags & WLAN_STA_S1G)
+		hostapd_get_s1g_capab(hapd, sta->s1g_capabilities, &s1g_cap);
+#endif /* CONFIG_IEEE80211AH */
 
 	/*
 	 * Add the station with forced WLAN_STA_ASSOC flag. The sta->flags
@@ -3787,6 +3798,7 @@ static int add_associated_sta(struct hostapd_data *hapd,
 			    sta->flags & WLAN_STA_HE ? &he_cap : NULL,
 			    sta->flags & WLAN_STA_HE ? sta->he_capab_len : 0,
 			    sta->he_6ghz_capab,
+			    sta->flags & WLAN_STA_S1G ? &s1g_cap : NULL,
 			    sta->flags | WLAN_STA_ASSOC, sta->qosinfo,
 			    sta->vht_opmode, sta->p2p_ie ? 1 : 0,
 			    set)) {

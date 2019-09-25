@@ -327,6 +327,7 @@ void ap_free_sta(struct hostapd_data *hapd, struct sta_info *sta)
 	os_free(sta->vht_operation);
 	os_free(sta->he_capab);
 	os_free(sta->he_6ghz_capab);
+	os_free(sta->s1g_capabilities);
 	hostapd_free_psk_list(sta->psk);
 	os_free(sta->identity);
 	os_free(sta->radius_cui);
@@ -1518,7 +1519,7 @@ int ap_sta_re_add(struct hostapd_data *hapd, struct sta_info *sta)
 	if (hostapd_sta_add(hapd, sta->addr, 0, 0,
 			    sta->supported_rates,
 			    sta->supported_rates_len,
-			    0, NULL, NULL, NULL, 0, NULL,
+			    0, NULL, NULL, NULL, 0, NULL, NULL,
 			    sta->flags, 0, 0, 0, 0)) {
 		hostapd_logger(hapd, sta->addr,
 			       HOSTAPD_MODULE_IEEE80211,

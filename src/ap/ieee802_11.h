@@ -80,11 +80,16 @@ void hostapd_get_he_capab(struct hostapd_data *hapd,
 			  const struct ieee80211_he_capabilities *he_cap,
 			  struct ieee80211_he_capabilities *neg_he_cap,
 			  size_t he_capab_len);
+void hostapd_get_s1g_capab(struct hostapd_data *hapd,
+			   struct ieee80211_s1g_capabilities *s1g_cap,
+			   struct ieee80211_s1g_capabilities *neg_s1g_cap);
 int hostapd_get_aid(struct hostapd_data *hapd, struct sta_info *sta);
 u16 copy_sta_ht_capab(struct hostapd_data *hapd, struct sta_info *sta,
 		      const u8 *ht_capab);
 u16 copy_sta_vendor_vht(struct hostapd_data *hapd, struct sta_info *sta,
 			const u8 *ie, size_t len);
+u16 copy_sta_s1g_capab(struct hostapd_data *hapd, struct sta_info *sta,
+		       const u8 *s1g_capab);
 
 void update_ht_state(struct hostapd_data *hapd, struct sta_info *sta);
 void ht40_intolerant_add(struct hostapd_iface *iface, struct sta_info *sta);

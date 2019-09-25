@@ -4834,6 +4834,18 @@ static int wpa_driver_nl80211_sta_add(void *priv,
 				goto fail;
 		}
 
+#ifdef CONFIG_IEEE80211AH
+		if (params->s1g_capabilities) {
+			wpa_hexdump(MSG_DEBUG, "  * s1g_capabilities",
+				    (u8 *) params->s1g_capabilities,
+				    sizeof(*params->s1g_capabilities));
+			if (nla_put(msg, NL80211_ATTR_S1G_CAPABILITY,
+				    sizeof(*params->s1g_capabilities),
+				    params->s1g_capabilities))
+				goto fail;
+		}
+#endif
+
 		if (params->ext_capab) {
 			wpa_hexdump(MSG_DEBUG, "  * ext_capab",
 				    params->ext_capab, params->ext_capab_len);

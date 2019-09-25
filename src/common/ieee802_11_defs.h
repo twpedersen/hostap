@@ -1157,6 +1157,14 @@ struct ieee80211_ampe_ie {
 	 */
 } STRUCT_PACKED;
 
+#define S1G_CAPAB_OCTETS 10
+#define S1G_MCS_NSS_OCTETS 5
+
+struct ieee80211_s1g_capabilities {
+	u8 cap_info[S1G_CAPAB_OCTETS];
+	u8 supp_mcs_nss[S1G_MCS_NSS_OCTETS];
+} STRUCT_PACKED;
+
 #ifdef _MSC_VER
 #pragma pack(pop)
 #endif /* _MSC_VER */
@@ -1167,6 +1175,9 @@ struct ieee80211_ampe_ie {
 
 #define OVERLAPPING_BSS_TRANS_DELAY_FACTOR 5
 
+#define SM(f, v)	(((v) << f##_S) & f)
+#define MS(f, v)	(((v) & f) >> f##_S)
+
 /* S1G Capabilities Information field */
 #define S1G_CAPAB_B0_S1G_LONG BIT(0)
 #define S1G_CAPAB_B0_SGI_1MHZ BIT(1)
@@ -1174,8 +1185,8 @@ struct ieee80211_ampe_ie {
 #define S1G_CAPAB_B0_SGI_4MHZ BIT(3)
 #define S1G_CAPAB_B0_SGI_8MHZ BIT(4)
 #define S1G_CAPAB_B0_SGI_16MHZ BIT(5)
-#define S1G_CAPAB_B0_SUPP_CH_WIDTH_MASK (BIT(6) | BIT(7))
-#define S1G_CAPAB_B0_SUPP_CH_WIDTH_SHIFT 6
+#define S1G_CAPAB_B0_SUPP_CH_WIDTH (BIT(6) | BIT(7))
+#define S1G_CAPAB_B0_SUPP_CH_WIDTH_S 6
 
 #define S1G_CAPAB_B1_RX_LDPC BIT(0)
 #define S1G_CAPAB_B1_TX_STBC BIT(1)

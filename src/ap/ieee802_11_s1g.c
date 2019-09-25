@@ -20,6 +20,48 @@
 #include "ieee802_11.h"
 #include "dfs.h"
 
+void hostapd_get_s1g_capab(struct hostapd_data *hapd,
+			   struct ieee80211_s1g_capabilities *s1g_cap,
+			   struct ieee80211_s1g_capabilities *neg_s1g_cap)
+{
+	int i;
+
+	/* TODO: OK for now, but not all these are symmetrical */
+	for (i = 0; i < sizeof(hapd->iconf->s1g_capab); i++)
+		neg_s1g_cap->cap_info[i] = hapd->iconf->s1g_capab[i] &
+					   s1g_cap->cap_info[i];
+
+	/* take supported channel width as is, driver will take the minimum */
+	neg_s1g_cap->cap_info[0] &= ~S1G_CAPAB_B0_SUPP_CH_WIDTH;
+	neg_s1g_cap->cap_info[0] |= SM(S1G_CAPAB_B0_SUPP_CH_WIDTH,
+				       s1g_cap->cap_info[0]);
+
+	os_memcpy(neg_s1g_cap->supp_mcs_nss, s1g_cap->supp_mcs_nss,
+		  sizeof(neg_s1g_cap->supp_mcs_nss));
+}
+
+u16 copy_sta_s1g_capab(struct hostapd_data *hapd, struct sta_info *sta,
+		       const u8 *s1g_capab)
+{
+	if (!s1g_capab)
+		return WLAN_STATUS_SUCCESS;
+
+	if (sta->s1g_capabilities == NULL) {
+		sta->s1g_capabilities =
+			os_zalloc(sizeof(struct ieee80211_s1g_capabilities));
+		if (sta->s1g_capabilities == NULL)
+			return WLAN_STATUS_UNSPECIFIED_FAILURE;
+	}
+
+	sta->flags |= WLAN_STA_S1G;
+	os_memcpy(sta->s1g_capabilities, s1g_capab,
+		  sizeof(struct ieee80211_s1g_capabilities));
+
+	return WLAN_STATUS_SUCCESS;
+}
+
+
+
 static int hostapd_s1g_chan_bw(struct hostapd_iface *iface, int channel)
 {
 	struct hostapd_channel_data *chan;

@@ -2100,6 +2100,7 @@ struct hostapd_sta_add_params {
 	u16 listen_interval;
 	const struct ieee80211_ht_capabilities *ht_capabilities;
 	const struct ieee80211_vht_capabilities *vht_capabilities;
+	const struct ieee80211_s1g_capabilities *s1g_capabilities;
 	int vht_opmode_enabled;
 	u8 vht_opmode;
 	const struct ieee80211_he_capabilities *he_capab;
