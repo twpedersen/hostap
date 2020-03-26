@@ -1947,7 +1947,21 @@ wpa_driver_nl80211_postprocess_modes(struct hostapd_hw_modes *modes,
 	for (m = 0; m < *num_modes; m++) {
 		if (!modes[m].num_channels)
 			continue;
-		if (modes[m].channels[0].freq < KHZ(4000)) {
+		/* this is a problem, eg. hwsim test nfc_wps_handover_chan14.  If the
+		 * kernel advertises a mode with freq < 4000 MHz, we
+		 * automatically assume 11b, so the real 11b info is never
+		 * processed (see "if only 802.11g mode..." below).
+		 * This means the kernel would break existing hostapds, which
+		 * is not allowed.
+		 * What do?
+		 * */
+		if (modes[m].channels[0].freq < KHZ(2000)) {
+			/* currently some hostapd code (ACS scan) doesn't know
+			 * to check whether mode is unknown, so just hide the
+			 * channels for now */
+			modes[m].num_channels = 0;
+			continue;
+		} else if (modes[m].channels[0].freq < KHZ(4000)) {
 			modes[m].mode = HOSTAPD_MODE_IEEE80211B;
 			for (i = 0; i < modes[m].num_rates; i++) {
 				if (modes[m].rates[i] > 200) {
