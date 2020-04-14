@@ -2893,9 +2893,10 @@ static u16 check_multi_ap(struct hostapd_data *hapd, struct sta_info *sta,
 static u16 copy_supp_rates(struct hostapd_data *hapd, struct sta_info *sta,
 			   struct ieee802_11_elems *elems)
 {
-	/* Supported rates not used in IEEE 802.11ad/DMG */
+	/* Supported rates not used in IEEE 802.11ad/DMG or 802.11ah/S1G */
 	if (hapd->iface->current_mode &&
-	    hapd->iface->current_mode->mode == HOSTAPD_MODE_IEEE80211AD)
+	    (hapd->iface->current_mode->mode == HOSTAPD_MODE_IEEE80211AD ||
+	     hapd->conf->s1g))
 		return WLAN_STATUS_SUCCESS;
 
 	if (!elems->supp_rates) {
