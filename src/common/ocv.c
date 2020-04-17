@@ -127,8 +127,8 @@ int ocv_verify_tx_params(const u8 *oci_ie, size_t oci_ie_len,
 	/* Primary frequency used to send frames to STA must match the STA's */
 	if ((int) ci->frequency != oci.freq) {
 		os_snprintf(ocv_errorstr, sizeof(ocv_errorstr),
-			    "primary channel mismatch in received OCI (we use %d but receiver is using %d)",
-			    ci->frequency, oci.freq);
+			    "primary channel mismatch in received OCI (we use %g but receiver is using %d)",
+			    PR_KHZ(ci->frequency), oci.freq);
 		return -1;
 	}
 
@@ -147,7 +147,7 @@ int ocv_verify_tx_params(const u8 *oci_ie, size_t oci_ie_len,
 	 * Note that the field ci->sec_channel is only filled in when we use
 	 * 40 MHz.
 	 */
-	if (tx_chanwidth == 40 && ci->frequency < 2500 &&
+	if (tx_chanwidth == 40 && ci->frequency < KHZ(2500) &&
 	    ci->sec_channel != oci.sec_channel) {
 		os_snprintf(ocv_errorstr, sizeof(ocv_errorstr),
 			    "secondary channel mismatch in received OCI (we use %d but receiver is using %d)",

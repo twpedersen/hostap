@@ -287,7 +287,7 @@ static int wpa_supplicant_mesh_init(struct wpa_supplicant *wpa_s,
 	bss->mesh_sta_free_cb = mesh_mpm_free_sta;
 	frequency = ssid->frequency;
 	if (frequency != freq->freq &&
-	    frequency == freq->freq + freq->sec_channel_offset * 20) {
+	    frequency == freq->freq + KHZ(freq->sec_channel_offset * 20)) {
 		wpa_printf(MSG_DEBUG, "mesh: pri/sec channels switched");
 		frequency = freq->freq;
 	}
@@ -329,8 +329,8 @@ static int wpa_supplicant_mesh_init(struct wpa_supplicant *wpa_s,
 	/* need conf->hw_mode for supported rates. */
 	conf->hw_mode = ieee80211_freq_to_chan(frequency, &conf->channel);
 	if (conf->hw_mode == NUM_HOSTAPD_MODES) {
-		wpa_printf(MSG_ERROR, "Unsupported mesh mode frequency: %d MHz",
-			   frequency);
+		wpa_printf(MSG_ERROR, "Unsupported mesh mode frequency: %g MHz",
+			   PR_KHZ(frequency));
 		goto out_free;
 	}
 	if (ssid->ht40)
@@ -342,13 +342,13 @@ static int wpa_supplicant_mesh_init(struct wpa_supplicant *wpa_s,
 		case CHANWIDTH_80MHZ:
 		case CHANWIDTH_80P80MHZ:
 			ieee80211_freq_to_chan(
-				frequency,
+				KHZ(frequency),
 				&conf->vht_oper_centr_freq_seg0_idx);
 			conf->vht_oper_centr_freq_seg0_idx += ssid->ht40 * 2;
 			break;
 		case CHANWIDTH_160MHZ:
 			ieee80211_freq_to_chan(
-				frequency,
+				KHZ(frequency),
 				&conf->vht_oper_centr_freq_seg0_idx);
 			conf->vht_oper_centr_freq_seg0_idx += ssid->ht40 * 2;
 			conf->vht_oper_centr_freq_seg0_idx += 40 / 5;

@@ -518,6 +518,13 @@ static void write_int(FILE *f, const char *field, int value, int def)
 	fprintf(f, "\t%s=%d\n", field, value);
 }
 
+static void write_freq(FILE *f, const char *field, int value, int def)
+{
+	if (value == def)
+		return;
+	fprintf(f, "\t%s=%g\n", field, PR_KHZ(value));
+}
+
 
 static void write_bssid(FILE *f, struct wpa_ssid *ssid)
 {
@@ -762,6 +769,7 @@ static void wpa_config_write_network(FILE *f, struct wpa_ssid *ssid)
 #define INTe(t, m) write_int(f, #t, ssid->eap.m, 0)
 #define INT_DEF(t, def) write_int(f, #t, ssid->t, def)
 #define INT_DEFe(t, m, def) write_int(f, #t, ssid->eap.m, def)
+#define FREQ(t) write_freq(f, #t, ssid->t, 0)
 
 	STR(ssid);
 	INT(scan_ssid);
@@ -866,7 +874,7 @@ static void wpa_config_write_network(FILE *f, struct wpa_ssid *ssid)
 #endif /* IEEE8021X_EAPOL */
 	INT(mode);
 	INT(no_auto_peer);
-	INT(frequency);
+	FREQ(frequency);
 	INT(enable_edmg);
 	INT(edmg_channel);
 	INT(fixed_freq);
@@ -880,8 +888,8 @@ static void wpa_config_write_network(FILE *f, struct wpa_ssid *ssid)
 	INT_DEF(ht, 1);
 	INT(ht40);
 	INT_DEF(max_oper_chwidth, DEFAULT_MAX_OPER_CHWIDTH);
-	INT(vht_center_freq1);
-	INT(vht_center_freq2);
+	FREQ(vht_center_freq1);
+	FREQ(vht_center_freq2);
 	INT(pbss);
 	INT(wps_disabled);
 	INT(fils_dh_group);

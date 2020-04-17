@@ -79,8 +79,8 @@ int wpas_dpp_qr_code(struct wpa_supplicant *wpa_s, const char *cmd)
 		wpa_printf(MSG_DEBUG,
 			   "DPP: Sending out pending authentication response");
 		wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR
-			" freq=%u type=%d",
-			MAC2STR(auth->peer_mac_addr), auth->curr_freq,
+			" freq=%g type=%d",
+			MAC2STR(auth->peer_mac_addr), PR_KHZ(auth->curr_freq),
 			DPP_PA_AUTHENTICATION_RESP);
 		offchannel_send_action(wpa_s, auth->curr_freq,
 				       auth->peer_mac_addr, wpa_s->own_addr,
@@ -190,8 +190,8 @@ static void wpas_dpp_auth_resp_retry_timeout(void *eloop_ctx, void *timeout_ctx)
 	wpa_printf(MSG_DEBUG,
 		   "DPP: Retry Authentication Response after timeout");
 	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR
-		" freq=%u type=%d",
-		MAC2STR(auth->peer_mac_addr), auth->curr_freq,
+		" freq=%g type=%d",
+		MAC2STR(auth->peer_mac_addr), PR_KHZ(auth->curr_freq),
 		DPP_PA_AUTHENTICATION_RESP);
 	offchannel_send_action(wpa_s, auth->curr_freq, auth->peer_mac_addr,
 			       wpa_s->own_addr, broadcast,
@@ -389,8 +389,8 @@ void wpas_dpp_send_conn_status_result(struct wpa_supplicant *wpa_s,
 	}
 
 	wpa_msg(wpa_s, MSG_INFO,
-		DPP_EVENT_TX "dst=" MACSTR " freq=%u type=%d",
-		MAC2STR(auth->peer_mac_addr), auth->curr_freq,
+		DPP_EVENT_TX "dst=" MACSTR " freq=%g type=%d",
+		MAC2STR(auth->peer_mac_addr), PR_KHZ(auth->curr_freq),
 		DPP_PA_CONNECTION_STATUS_RESULT);
 	offchannel_send_action(wpa_s, auth->curr_freq,
 			       auth->peer_mac_addr, wpa_s->own_addr, broadcast,
@@ -428,10 +428,10 @@ static void wpas_dpp_tx_status(struct wpa_supplicant *wpa_s,
 	res_txt = result == OFFCHANNEL_SEND_ACTION_SUCCESS ? "SUCCESS" :
 		(result == OFFCHANNEL_SEND_ACTION_NO_ACK ? "no-ACK" :
 		 "FAILED");
-	wpa_printf(MSG_DEBUG, "DPP: TX status: freq=%u dst=" MACSTR
-		   " result=%s", freq, MAC2STR(dst), res_txt);
+	wpa_printf(MSG_DEBUG, "DPP: TX status: freq=%g dst=" MACSTR
+		   " result=%s", PR_KHZ(freq), MAC2STR(dst), res_txt);
 	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX_STATUS "dst=" MACSTR
-		" freq=%u result=%s", MAC2STR(dst), freq, res_txt);
+		" freq=%g result=%s", MAC2STR(dst), PR_KHZ(freq), res_txt);
 
 	if (!wpa_s->dpp_auth) {
 		wpa_printf(MSG_DEBUG,
@@ -509,9 +509,9 @@ static void wpas_dpp_tx_status(struct wpa_supplicant *wpa_s,
 	if (!wpa_s->dpp_auth_ok_on_ack && wpa_s->dpp_auth->neg_freq > 0 &&
 	    wpa_s->dpp_auth->curr_freq != wpa_s->dpp_auth->neg_freq) {
 		wpa_printf(MSG_DEBUG,
-			   "DPP: Move from curr_freq %u MHz to neg_freq %u MHz for response",
-			   wpa_s->dpp_auth->curr_freq,
-			   wpa_s->dpp_auth->neg_freq);
+			   "DPP: Move from curr_freq %g MHz to neg_freq %g MHz for response",
+			   PR_KHZ(wpa_s->dpp_auth->curr_freq),
+			   PR_KHZ(wpa_s->dpp_auth->neg_freq));
 		offchannel_send_action_done(wpa_s);
 		wpas_dpp_listen_start(wpa_s, wpa_s->dpp_auth->neg_freq);
 	}
@@ -577,8 +577,8 @@ static void wpas_dpp_reply_wait_timeout(void *eloop_ctx, void *timeout_ctx)
 	if (auth->neg_freq > 0)
 		freq = auth->neg_freq;
 	wpa_printf(MSG_DEBUG,
-		   "DPP: Continue reply wait on channel %u MHz for %u ms",
-		   freq, wait_time);
+		   "DPP: Continue reply wait on channel %g MHz for %u ms",
+		   PR_KHZ(freq), wait_time);
 	wpa_s->dpp_in_response_listen = 1;
 	wpas_dpp_listen_start(wpa_s, freq);
 
@@ -690,11 +690,11 @@ static int wpas_dpp_auth_init_next(struct wpa_supplicant *wpa_s)
 	wait_time -= 10;
 	if (auth->neg_freq > 0 && freq != auth->neg_freq) {
 		wpa_printf(MSG_DEBUG,
-			   "DPP: Initiate on %u MHz and move to neg_freq %u MHz for response",
-			   freq, auth->neg_freq);
+			   "DPP: Initiate on %g MHz and move to neg_freq %g MHz for response",
+			   PR_KHZ(freq), PR_KHZ(auth->neg_freq));
 	}
-	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%u type=%d",
-		MAC2STR(dst), freq, DPP_PA_AUTHENTICATION_REQ);
+	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%g type=%d",
+		MAC2STR(dst), PR_KHZ(freq), DPP_PA_AUTHENTICATION_REQ);
 	auth->auth_req_ack = 0;
 	os_get_reltime(&wpa_s->dpp_last_init);
 	return offchannel_send_action(wpa_s, freq, dst,
@@ -798,7 +798,7 @@ int wpas_dpp_auth_init(struct wpa_supplicant *wpa_s, const char *cmd)
 
 	pos = os_strstr(cmd, " neg_freq=");
 	if (pos)
-		neg_freq = atoi(pos + 10);
+		neg_freq = KHZ(atof(pos + 10));
 
 	if (!tcp && wpa_s->dpp_auth) {
 		eloop_cancel_timeout(wpas_dpp_init_timeout, wpa_s, NULL);
@@ -891,8 +891,8 @@ static void dpp_start_listen_cb(struct wpa_radio_work *work, int deinit)
 	if (wpa_drv_remain_on_channel(wpa_s, lwork->freq,
 				      wpa_s->max_remain_on_chan) < 0) {
 		wpa_printf(MSG_DEBUG,
-			   "DPP: Failed to request the driver to remain on channel (%u MHz) for listen",
-			   lwork->freq);
+			   "DPP: Failed to request the driver to remain on channel (%g MHz) for listen",
+			   PR_KHZ(lwork->freq));
 		wpa_s->dpp_listen_freq = 0;
 		wpas_dpp_listen_work_done(wpa_s);
 		wpa_s->dpp_pending_listen_freq = 0;
@@ -938,7 +938,7 @@ int wpas_dpp_listen(struct wpa_supplicant *wpa_s, const char *cmd)
 {
 	int freq;
 
-	freq = atoi(cmd);
+	freq = KHZ(atof(cmd));
 	if (freq <= 0)
 		return -1;
 
@@ -957,8 +957,8 @@ int wpas_dpp_listen(struct wpa_supplicant *wpa_s, const char *cmd)
 	else
 		wpa_s->dpp_netrole = DPP_NETROLE_STA;
 	if (wpa_s->dpp_listen_freq == (unsigned int) freq) {
-		wpa_printf(MSG_DEBUG, "DPP: Already listening on %u MHz",
-			   freq);
+		wpa_printf(MSG_DEBUG, "DPP: Already listening on %g MHz",
+			   PR_KHZ(freq));
 		return 0;
 	}
 
@@ -972,8 +972,8 @@ void wpas_dpp_listen_stop(struct wpa_supplicant *wpa_s)
 	if (!wpa_s->dpp_listen_freq)
 		return;
 
-	wpa_printf(MSG_DEBUG, "DPP: Stop listen on %u MHz",
-		   wpa_s->dpp_listen_freq);
+	wpa_printf(MSG_DEBUG, "DPP: Stop listen on %g MHz",
+		   PR_KHZ(wpa_s->dpp_listen_freq));
 	wpa_drv_cancel_remain_on_channel(wpa_s);
 	wpa_drv_dpp_listen(wpa_s, false);
 	wpa_s->dpp_listen_freq = 0;
@@ -1013,8 +1013,8 @@ void wpas_dpp_cancel_remain_on_channel_cb(struct wpa_supplicant *wpa_s,
 		else
 			new_freq = wpa_s->dpp_auth->curr_freq;
 		wpa_printf(MSG_DEBUG,
-			   "DPP: Continue wait on %u MHz for the ongoing DPP provisioning session",
-			   new_freq);
+			   "DPP: Continue wait on %g MHz for the ongoing DPP provisioning session",
+			   PR_KHZ(new_freq));
 		wpas_dpp_listen_start(wpa_s, new_freq);
 		return;
 	}
@@ -1102,13 +1102,14 @@ static void wpas_dpp_rx_auth_req(struct wpa_supplicant *wpa_s, const u8 *src,
 	if (wpa_s->dpp_listen_freq &&
 	    wpa_s->dpp_listen_freq != wpa_s->dpp_auth->curr_freq) {
 		wpa_printf(MSG_DEBUG,
-			   "DPP: Stop listen on %u MHz to allow response on the request %u MHz",
-			   wpa_s->dpp_listen_freq, wpa_s->dpp_auth->curr_freq);
+			   "DPP: Stop listen on %g MHz to allow response on the request %g MHz",
+			   PR_KHZ(wpa_s->dpp_listen_freq),
+			   PR_KHZ(wpa_s->dpp_auth->curr_freq));
 		wpas_dpp_listen_stop(wpa_s);
 	}
 
-	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%u type=%d",
-		MAC2STR(src), wpa_s->dpp_auth->curr_freq,
+	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%g type=%d",
+		MAC2STR(src), PR_KHZ(wpa_s->dpp_auth->curr_freq),
 		DPP_PA_AUTHENTICATION_RESP);
 	offchannel_send_action(wpa_s, wpa_s->dpp_auth->curr_freq,
 			       src, wpa_s->own_addr, broadcast,
@@ -1615,8 +1616,8 @@ fail:
 			goto fail2;
 
 		wpa_msg(wpa_s, MSG_INFO,
-			DPP_EVENT_TX "dst=" MACSTR " freq=%u type=%d",
-			MAC2STR(addr), auth->curr_freq,
+			DPP_EVENT_TX "dst=" MACSTR " freq=%g type=%d",
+			MAC2STR(addr), PR_KHZ(auth->curr_freq),
 			DPP_PA_CONFIGURATION_RESULT);
 		offchannel_send_action(wpa_s, auth->curr_freq,
 				       addr, wpa_s->own_addr, broadcast,
@@ -1658,8 +1659,8 @@ static void wpas_dpp_start_gas_client(struct wpa_supplicant *wpa_s)
 		return;
 	}
 
-	wpa_printf(MSG_DEBUG, "DPP: GAS request to " MACSTR " (freq %u MHz)",
-		   MAC2STR(auth->peer_mac_addr), auth->curr_freq);
+	wpa_printf(MSG_DEBUG, "DPP: GAS request to " MACSTR " (freq %g MHz)",
+		   MAC2STR(auth->peer_mac_addr), PR_KHZ(auth->curr_freq));
 
 	res = gas_query_req(wpa_s->gas, auth->peer_mac_addr, auth->curr_freq,
 			    1, 1, buf, wpas_dpp_gas_resp_cb, wpa_s);
@@ -1705,7 +1706,7 @@ static void wpas_dpp_rx_auth_resp(struct wpa_supplicant *wpa_s, const u8 *src,
 	struct wpabuf *msg;
 
 	wpa_printf(MSG_DEBUG, "DPP: Authentication Response from " MACSTR
-		   " (freq %u MHz)", MAC2STR(src), freq);
+		   " (freq %g MHz)", MAC2STR(src), PR_KHZ(freq));
 
 	if (!auth) {
 		wpa_printf(MSG_DEBUG,
@@ -1743,8 +1744,9 @@ static void wpas_dpp_rx_auth_resp(struct wpa_supplicant *wpa_s, const u8 *src,
 	}
 	os_memcpy(auth->peer_mac_addr, src, ETH_ALEN);
 
-	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%u type=%d",
-		MAC2STR(src), auth->curr_freq, DPP_PA_AUTHENTICATION_CONF);
+	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%g type=%d",
+		MAC2STR(src), PR_KHZ(auth->curr_freq),
+		DPP_PA_AUTHENTICATION_CONF);
 	offchannel_send_action(wpa_s, auth->curr_freq,
 			       src, wpa_s->own_addr, broadcast,
 			       wpabuf_head(msg), wpabuf_len(msg),
@@ -2385,8 +2387,8 @@ static int wpas_dpp_allow_ir(struct wpa_supplicant *wpa_s, unsigned int freq)
 	}
 
 	wpa_printf(MSG_DEBUG,
-		   "DPP: Frequency %u MHz not supported or does not allow PKEX initiation in the current channel list",
-		   freq);
+		   "DPP: Frequency %g MHz not supported or does not allow PKEX initiation in the current channel list",
+		   PR_KHZ(freq));
 
 	return 0;
 }
@@ -2395,18 +2397,18 @@ static int wpas_dpp_allow_ir(struct wpa_supplicant *wpa_s, unsigned int freq)
 static int wpas_dpp_pkex_next_channel(struct wpa_supplicant *wpa_s,
 				      struct dpp_pkex *pkex)
 {
-	if (pkex->freq == 2437)
-		pkex->freq = 5745;
-	else if (pkex->freq == 5745)
-		pkex->freq = 5220;
-	else if (pkex->freq == 5220)
-		pkex->freq = 60480;
+	if (pkex->freq == KHZ(2437))
+		pkex->freq = KHZ(5745);
+	else if (pkex->freq == KHZ(5745))
+		pkex->freq = KHZ(5220);
+	else if (pkex->freq == KHZ(5220))
+		pkex->freq = KHZ(60480);
 	else
 		return -1; /* no more channels to try */
 
 	if (wpas_dpp_allow_ir(wpa_s, pkex->freq) == 1) {
-		wpa_printf(MSG_DEBUG, "DPP: Try to initiate on %u MHz",
-			   pkex->freq);
+		wpa_printf(MSG_DEBUG, "DPP: Try to initiate on %g MHz",
+			   PR_KHZ(pkex->freq));
 		return 0;
 	}
 
@@ -2436,8 +2438,9 @@ static void wpas_dpp_pkex_retry_timeout(void *eloop_ctx, void *timeout_ctx)
 	pkex->exch_req_tries++;
 	wpa_printf(MSG_DEBUG, "DPP: Retransmit PKEX Exchange Request (try %u)",
 		   pkex->exch_req_tries);
-	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%u type=%d",
-		MAC2STR(broadcast), pkex->freq, DPP_PA_PKEX_EXCHANGE_REQ);
+	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%g type=%d",
+		MAC2STR(broadcast), PR_KHZ(pkex->freq),
+		DPP_PA_PKEX_EXCHANGE_REQ);
 	offchannel_send_action(wpa_s, pkex->freq, broadcast,
 			       wpa_s->own_addr, broadcast,
 			       wpabuf_head(pkex->exchange_req),
@@ -2460,11 +2463,11 @@ wpas_dpp_tx_pkex_status(struct wpa_supplicant *wpa_s,
 	res_txt = result == OFFCHANNEL_SEND_ACTION_SUCCESS ? "SUCCESS" :
 		(result == OFFCHANNEL_SEND_ACTION_NO_ACK ? "no-ACK" :
 		 "FAILED");
-	wpa_printf(MSG_DEBUG, "DPP: TX status: freq=%u dst=" MACSTR
+	wpa_printf(MSG_DEBUG, "DPP: TX status: freq=%g dst=" MACSTR
 		   " result=%s (PKEX)",
-		   freq, MAC2STR(dst), res_txt);
+		   PR_KHZ(freq), MAC2STR(dst), res_txt);
 	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX_STATUS "dst=" MACSTR
-		" freq=%u result=%s", MAC2STR(dst), freq, res_txt);
+		" freq=%g result=%s", MAC2STR(dst), PR_KHZ(freq), res_txt);
 
 	if (!pkex) {
 		wpa_printf(MSG_DEBUG,
@@ -2535,8 +2538,8 @@ wpas_dpp_rx_pkex_exchange_req(struct wpa_supplicant *wpa_s, const u8 *src,
 	wait_time = wpa_s->max_remain_on_chan;
 	if (wait_time > 2000)
 		wait_time = 2000;
-	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%u type=%d",
-		MAC2STR(src), freq, DPP_PA_PKEX_EXCHANGE_RESP);
+	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%g type=%d",
+		MAC2STR(src), PR_KHZ(freq), DPP_PA_PKEX_EXCHANGE_RESP);
 	offchannel_send_action(wpa_s, freq, src, wpa_s->own_addr,
 			       broadcast,
 			       wpabuf_head(msg), wpabuf_len(msg),
@@ -2578,8 +2581,8 @@ wpas_dpp_rx_pkex_exchange_resp(struct wpa_supplicant *wpa_s, const u8 *src,
 	wait_time = wpa_s->max_remain_on_chan;
 	if (wait_time > 2000)
 		wait_time = 2000;
-	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%u type=%d",
-		MAC2STR(src), freq, DPP_PA_PKEX_COMMIT_REVEAL_REQ);
+	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%g type=%d",
+		MAC2STR(src), PR_KHZ(freq), DPP_PA_PKEX_COMMIT_REVEAL_REQ);
 	offchannel_send_action(wpa_s, freq, src, wpa_s->own_addr,
 			       broadcast,
 			       wpabuf_head(msg), wpabuf_len(msg),
@@ -2638,8 +2641,8 @@ wpas_dpp_rx_pkex_commit_reveal_req(struct wpa_supplicant *wpa_s, const u8 *src,
 	wait_time = wpa_s->max_remain_on_chan;
 	if (wait_time > 2000)
 		wait_time = 2000;
-	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%u type=%d",
-		MAC2STR(src), freq, DPP_PA_PKEX_COMMIT_REVEAL_RESP);
+	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%g type=%d",
+		MAC2STR(src), PR_KHZ(freq), DPP_PA_PKEX_COMMIT_REVEAL_RESP);
 	offchannel_send_action(wpa_s, freq, src, wpa_s->own_addr,
 			       broadcast,
 			       wpabuf_head(msg), wpabuf_len(msg),
@@ -2714,25 +2717,25 @@ void wpas_dpp_rx_action(struct wpa_supplicant *wpa_s, const u8 *src,
 
 	wpa_printf(MSG_DEBUG,
 		   "DPP: Received DPP Public Action frame crypto suite %u type %d from "
-		   MACSTR " freq=%u",
-		   crypto_suite, type, MAC2STR(src), freq);
+		   MACSTR " freq=%g",
+		   crypto_suite, type, MAC2STR(src), PR_KHZ(freq));
 	if (crypto_suite != 1) {
 		wpa_printf(MSG_DEBUG, "DPP: Unsupported crypto suite %u",
 			   crypto_suite);
 		wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_RX "src=" MACSTR
-			" freq=%u type=%d ignore=unsupported-crypto-suite",
-			MAC2STR(src), freq, type);
+			" freq=%g type=%d ignore=unsupported-crypto-suite",
+			MAC2STR(src), PR_KHZ(freq), type);
 		return;
 	}
 	wpa_hexdump(MSG_MSGDUMP, "DPP: Received message attributes", buf, len);
 	if (dpp_check_attrs(buf, len) < 0) {
 		wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_RX "src=" MACSTR
-			" freq=%u type=%d ignore=invalid-attributes",
-			MAC2STR(src), freq, type);
+			" freq=%g type=%d ignore=invalid-attributes",
+			MAC2STR(src), PR_KHZ(freq), type);
 		return;
 	}
-	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_RX "src=" MACSTR " freq=%u type=%d",
-		MAC2STR(src), freq, type);
+	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_RX "src=" MACSTR " freq=%g type=%d",
+		MAC2STR(src), PR_KHZ(freq), type);
 
 	switch (type) {
 	case DPP_PA_AUTHENTICATION_REQ:
@@ -2950,11 +2953,11 @@ wpas_dpp_tx_introduction_status(struct wpa_supplicant *wpa_s,
 	res_txt = result == OFFCHANNEL_SEND_ACTION_SUCCESS ? "SUCCESS" :
 		(result == OFFCHANNEL_SEND_ACTION_NO_ACK ? "no-ACK" :
 		 "FAILED");
-	wpa_printf(MSG_DEBUG, "DPP: TX status: freq=%u dst=" MACSTR
+	wpa_printf(MSG_DEBUG, "DPP: TX status: freq=%g dst=" MACSTR
 		   " result=%s (DPP Peer Discovery Request)",
-		   freq, MAC2STR(dst), res_txt);
+		   PR_KHZ(freq), MAC2STR(dst), res_txt);
 	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX_STATUS "dst=" MACSTR
-		" freq=%u result=%s", MAC2STR(dst), freq, res_txt);
+		" freq=%g result=%s", MAC2STR(dst), PR_KHZ(freq), res_txt);
 	/* TODO: Time out wait for response more quickly in error cases? */
 }
 
@@ -3073,8 +3076,9 @@ skip_connector:
 	wait_time = wpa_s->max_remain_on_chan;
 	if (wait_time > 2000)
 		wait_time = 2000;
-	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%u type=%d",
-		MAC2STR(bss->bssid), bss->freq, DPP_PA_PEER_DISCOVERY_REQ);
+	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%g type=%d",
+		MAC2STR(bss->bssid), PR_KHZ(bss->freq),
+		DPP_PA_PEER_DISCOVERY_REQ);
 	offchannel_send_action(wpa_s, bss->freq, bss->bssid, wpa_s->own_addr,
 			       broadcast,
 			       wpabuf_head(msg), wpabuf_len(msg),
@@ -3153,10 +3157,10 @@ int wpas_dpp_pkex_add(struct wpa_supplicant *wpa_s, const char *cmd)
 		wait_time = wpa_s->max_remain_on_chan;
 		if (wait_time > 2000)
 			wait_time = 2000;
-		pkex->freq = 2437;
+		pkex->freq = KHZ(2437);
 		wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR
-			" freq=%u type=%d",
-			MAC2STR(broadcast), pkex->freq,
+			" freq=%g type=%d",
+			MAC2STR(broadcast), PR_KHZ(pkex->freq),
 			DPP_PA_PKEX_EXCHANGE_REQ);
 		offchannel_send_action(wpa_s, pkex->freq, broadcast,
 				       wpa_s->own_addr, broadcast,
@@ -3342,8 +3346,8 @@ static void wpas_dpp_chirp_tx_status(struct wpa_supplicant *wpa_s,
 				     enum offchannel_send_action_result result)
 {
 	if (result == OFFCHANNEL_SEND_ACTION_FAILED) {
-		wpa_printf(MSG_DEBUG, "DPP: Failed to send chirp on %d MHz",
-			   wpa_s->dpp_chirp_freq);
+		wpa_printf(MSG_DEBUG, "DPP: Failed to send chirp on %g MHz",
+			   PR_KHZ(wpa_s->dpp_chirp_freq));
 		if (eloop_register_timeout(0, 0, wpas_dpp_chirp_next,
 					   wpa_s, NULL) < 0)
 			wpas_dpp_chirp_stop(wpa_s);
@@ -3370,9 +3374,10 @@ static void wpas_dpp_chirp_start(struct wpa_supplicant *wpa_s)
 			return;
 		type = DPP_PA_RECONFIG_ANNOUNCEMENT;
 	}
-	wpa_printf(MSG_DEBUG, "DPP: Chirp on %d MHz", wpa_s->dpp_chirp_freq);
-	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%u type=%d",
-		MAC2STR(broadcast), wpa_s->dpp_chirp_freq, type);
+	wpa_printf(MSG_DEBUG, "DPP: Chirp on %g MHz",
+		   PR_KHZ(wpa_s->dpp_chirp_freq));
+	wpa_msg(wpa_s, MSG_INFO, DPP_EVENT_TX "dst=" MACSTR " freq=%g type=%d",
+		MAC2STR(broadcast), PR_KHZ(wpa_s->dpp_chirp_freq), type);
 	if (offchannel_send_action(
 		    wpa_s, wpa_s->dpp_chirp_freq, broadcast,
 		    wpa_s->own_addr, broadcast,
@@ -3407,7 +3412,7 @@ static void wpas_dpp_chirp_scan_res_handler(struct wpa_supplicant *wpa_s,
 	}
 
 	/* Preferred chirping channels */
-	int_array_add_unique(&wpa_s->dpp_chirp_freqs, 2437);
+	int_array_add_unique(&wpa_s->dpp_chirp_freqs, KHZ(2437));
 
 	mode = get_mode(wpa_s->hw.modes, wpa_s->hw.num_modes,
 			HOSTAPD_MODE_IEEE80211A, 0);
@@ -3420,15 +3425,17 @@ static void wpas_dpp_chirp_scan_res_handler(struct wpa_supplicant *wpa_s,
 			if (chan->flag & (HOSTAPD_CHAN_DISABLED |
 					  HOSTAPD_CHAN_RADAR))
 				continue;
-			if (chan->freq == 5220)
+			if (chan->freq == KHZ(5220))
 				chan44 = 1;
-			if (chan->freq == 5745)
+			if (chan->freq == KHZ(5745))
 				chan149 = 1;
 		}
 		if (chan149)
-			int_array_add_unique(&wpa_s->dpp_chirp_freqs, 5745);
+			int_array_add_unique(&wpa_s->dpp_chirp_freqs,
+					     KHZ(5745));
 		else if (chan44)
-			int_array_add_unique(&wpa_s->dpp_chirp_freqs, 5220);
+			int_array_add_unique(&wpa_s->dpp_chirp_freqs,
+					     KHZ(5220));
 	}
 
 	mode = get_mode(wpa_s->hw.modes, wpa_s->hw.num_modes,
@@ -3439,9 +3446,10 @@ static void wpas_dpp_chirp_scan_res_handler(struct wpa_supplicant *wpa_s,
 
 			if ((chan->flag & (HOSTAPD_CHAN_DISABLED |
 					   HOSTAPD_CHAN_RADAR)) ||
-			    chan->freq != 60480)
+			    chan->freq != KHZ(60480))
 				continue;
-			int_array_add_unique(&wpa_s->dpp_chirp_freqs, 60480);
+			int_array_add_unique(&wpa_s->dpp_chirp_freqs,
+					     KHZ(60480));
 			break;
 		}
 	}
@@ -3489,8 +3497,8 @@ static void wpas_dpp_chirp_next(void *eloop_ctx, void *timeout_ctx)
 				break;
 		if (!wpa_s->dpp_chirp_freqs[i]) {
 			wpa_printf(MSG_DEBUG,
-				   "DPP: Previous chirp freq %d not found",
-				   wpa_s->dpp_chirp_freq);
+				   "DPP: Previous chirp freq %g not found",
+				   PR_KHZ(wpa_s->dpp_chirp_freq));
 			return;
 		}
 		i++;
@@ -3555,7 +3563,7 @@ int wpas_dpp_chirp(struct wpa_supplicant *wpa_s, const char *cmd)
 
 	pos = os_strstr(cmd, " listen=");
 	if (pos) {
-		listen_freq = atoi(pos + 8);
+		listen_freq = KHZ(atof(pos + 8));
 		if (listen_freq <= 0)
 			return -1;
 	}

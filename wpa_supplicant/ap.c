@@ -139,8 +139,8 @@ int wpa_supplicant_conf_ap_ht(struct wpa_supplicant *wpa_s,
 					       &conf->channel);
 
 	if (conf->hw_mode == NUM_HOSTAPD_MODES) {
-		wpa_printf(MSG_ERROR, "Unsupported AP mode frequency: %d MHz",
-			   ssid->frequency);
+		wpa_printf(MSG_ERROR, "Unsupported AP mode frequency: %g MHz",
+			   PR_KHZ(ssid->frequency));
 		return -1;
 	}
 
@@ -158,8 +158,8 @@ int wpa_supplicant_conf_ap_ht(struct wpa_supplicant *wpa_s,
 		int i, no_ht = 0;
 
 		wpa_printf(MSG_DEBUG,
-			   "Determining HT/VHT options based on driver capabilities (freq=%u chan=%u)",
-			   ssid->frequency, conf->channel);
+			   "Determining HT/VHT options based on driver capabilities (freq=%g chan=%u)",
+			   PR_KHZ(ssid->frequency), conf->channel);
 
 		for (i = 0; i < wpa_s->hw.num_modes; i++) {
 			if (wpa_s->hw.modes[i].mode == conf->hw_mode) {
@@ -776,7 +776,7 @@ int wpa_supplicant_create_ap(struct wpa_supplicant *wpa_s,
 		return -1;
 	}
 	if (ssid->frequency == 0)
-		ssid->frequency = 2462; /* default channel 11 */
+		ssid->frequency = KHZ(2462); /* default channel 11 */
 	params.freq.freq = ssid->frequency;
 
 	if ((ssid->mode == WPAS_MODE_AP || ssid->mode == WPAS_MODE_P2P_GO) &&
@@ -1657,7 +1657,8 @@ void wpas_ap_event_dfs_radar_detected(struct wpa_supplicant *wpa_s,
 		iface = wpa_s->ifmsh;
 	if (!iface || !iface->bss[0])
 		return;
-	wpa_printf(MSG_DEBUG, "DFS radar detected on %d MHz", radar->freq);
+	wpa_printf(MSG_DEBUG, "DFS radar detected on %g MHz",
+		   PR_KHZ(radar->freq));
 	hostapd_dfs_radar_detected(iface, radar->freq,
 				   radar->ht_enabled, radar->chan_offset,
 				   radar->chan_width,
@@ -1674,7 +1675,7 @@ void wpas_ap_event_dfs_cac_started(struct wpa_supplicant *wpa_s,
 		iface = wpa_s->ifmsh;
 	if (!iface || !iface->bss[0])
 		return;
-	wpa_printf(MSG_DEBUG, "DFS CAC started on %d MHz", radar->freq);
+	wpa_printf(MSG_DEBUG, "DFS CAC started on %g MHz", PR_KHZ(radar->freq));
 	hostapd_dfs_start_cac(iface, radar->freq,
 			      radar->ht_enabled, radar->chan_offset,
 			      radar->chan_width, radar->cf1, radar->cf2);
@@ -1690,7 +1691,8 @@ void wpas_ap_event_dfs_cac_finished(struct wpa_supplicant *wpa_s,
 		iface = wpa_s->ifmsh;
 	if (!iface || !iface->bss[0])
 		return;
-	wpa_printf(MSG_DEBUG, "DFS CAC finished on %d MHz", radar->freq);
+	wpa_printf(MSG_DEBUG, "DFS CAC finished on %g MHz",
+		   PR_KHZ(radar->freq));
 	hostapd_dfs_complete_cac(iface, 1, radar->freq,
 				 radar->ht_enabled, radar->chan_offset,
 				 radar->chan_width, radar->cf1, radar->cf2);
@@ -1706,7 +1708,7 @@ void wpas_ap_event_dfs_cac_aborted(struct wpa_supplicant *wpa_s,
 		iface = wpa_s->ifmsh;
 	if (!iface || !iface->bss[0])
 		return;
-	wpa_printf(MSG_DEBUG, "DFS CAC aborted on %d MHz", radar->freq);
+	wpa_printf(MSG_DEBUG, "DFS CAC aborted on %g MHz", PR_KHZ(radar->freq));
 	hostapd_dfs_complete_cac(iface, 0, radar->freq,
 				 radar->ht_enabled, radar->chan_offset,
 				 radar->chan_width, radar->cf1, radar->cf2);
@@ -1722,7 +1724,8 @@ void wpas_ap_event_dfs_cac_nop_finished(struct wpa_supplicant *wpa_s,
 		iface = wpa_s->ifmsh;
 	if (!iface || !iface->bss[0])
 		return;
-	wpa_printf(MSG_DEBUG, "DFS NOP finished on %d MHz", radar->freq);
+	wpa_printf(MSG_DEBUG, "DFS NOP finished on %g MHz",
+		   PR_KHZ(radar->freq));
 	hostapd_dfs_nop_finished(iface, radar->freq,
 				 radar->ht_enabled, radar->chan_offset,
 				 radar->chan_width, radar->cf1, radar->cf2);

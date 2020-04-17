@@ -243,8 +243,8 @@ int dpp_parse_uri_chan_list(struct dpp_bootstrap_info *bi,
 			pos++;
 		freq = ieee80211_chan_to_freq(NULL, opclass, channel);
 		wpa_printf(MSG_DEBUG,
-			   "DPP: URI channel-list: opclass=%d channel=%d ==> freq=%d",
-			   opclass, channel, freq);
+			   "DPP: URI channel-list: opclass=%d channel=%d ==> freq=%g",
+			   opclass, channel, PR_KHZ(freq));
 		if (freq < 0) {
 			wpa_printf(MSG_DEBUG,
 				   "DPP: Ignore unknown URI channel-list channel (opclass=%d channel=%d)",
@@ -469,7 +469,8 @@ static int dpp_channel_ok_init(struct hostapd_hw_modes *own_modes,
 		}
 	}
 
-	wpa_printf(MSG_DEBUG, "DPP: Peer channel %u MHz not supported", freq);
+	wpa_printf(MSG_DEBUG, "DPP: Peer channel %g MHz not supported",
+		   PR_KHZ(freq));
 	return 0;
 }
 
@@ -536,9 +537,9 @@ static int dpp_channel_local_list(struct dpp_authentication *auth,
 	auth->num_freq = 0;
 
 	if (!own_modes || !num_modes) {
-		auth->freq[0] = 2412;
-		auth->freq[1] = 2437;
-		auth->freq[2] = 2462;
+		auth->freq[0] = KHZ(2412);
+		auth->freq[1] = KHZ(2437);
+		auth->freq[2] = KHZ(2462);
 		auth->num_freq = 3;
 		return 0;
 	}
@@ -591,9 +592,9 @@ int dpp_prepare_channel_list(struct dpp_authentication *auth,
 
 	/* Prioritize 2.4 GHz channels 6, 1, 11 (in this order) to hit the most
 	 * likely channels first. */
-	freq_to_start(auth->freq, auth->num_freq, 2462);
-	freq_to_start(auth->freq, auth->num_freq, 2412);
-	freq_to_start(auth->freq, auth->num_freq, 2437);
+	freq_to_start(auth->freq, auth->num_freq, KHZ(2462));
+	freq_to_start(auth->freq, auth->num_freq, KHZ(2412));
+	freq_to_start(auth->freq, auth->num_freq, KHZ(2437));
 
 	auth->freq_idx = 0;
 	auth->curr_freq = auth->freq[0];
@@ -601,7 +602,7 @@ int dpp_prepare_channel_list(struct dpp_authentication *auth,
 	pos = freqs;
 	end = pos + sizeof(freqs);
 	for (i = 0; i < auth->num_freq; i++) {
-		res = os_snprintf(pos, end - pos, " %u", auth->freq[i]);
+		res = os_snprintf(pos, end - pos, " %g", PR_KHZ(auth->freq[i]));
 		if (os_snprintf_error(end - pos, res))
 			break;
 		pos += res;
@@ -3908,7 +3909,7 @@ int dpp_bootstrap_info(struct dpp_global *dpp, int id,
 			   "mac_addr=" MACSTR "\n"
 			   "info=%s\n"
 			   "num_freq=%u\n"
-			   "use_freq=%u\n"
+			   "use_freq=%g\n"
 			   "curve=%s\n"
 			   "pkhash=%s\n"
 			   "version=%d\n",
@@ -3916,7 +3917,7 @@ int dpp_bootstrap_info(struct dpp_global *dpp, int id,
 			   MAC2STR(bi->mac_addr),
 			   bi->info ? bi->info : "",
 			   bi->num_freq,
-			   bi->num_freq == 1 ? bi->freq[0] : 0,
+			   bi->num_freq == 1 ? PR_KHZ(bi->freq[0]) : 0,
 			   bi->curve->name,
 			   pkhash,
 			   bi->version);
@@ -4025,13 +4026,13 @@ static int dpp_nfc_update_bi_channel(struct dpp_bootstrap_info *own_bi,
 	mode = ieee80211_freq_to_channel_ext(freq, 0, 0, &op_class, &channel);
 	if (mode == NUM_HOSTAPD_MODES) {
 		wpa_printf(MSG_DEBUG,
-			   "DPP: Could not determine operating class or channel number for %u MHz",
-			   freq);
+			   "DPP: Could not determine operating class or channel number for %g MHz",
+			   PR_KHZ(freq));
 	}
 
 	wpa_printf(MSG_DEBUG,
-		   "DPP: Selected %u MHz (op_class %u channel %u) as the negotiation channel based on information from NFC negotiated handover",
-		   freq, op_class, channel);
+		   "DPP: Selected %g MHz (op_class %u channel %u) as the negotiation channel based on information from NFC negotiated handover",
+		   PR_KHZ(freq), op_class, channel);
 	os_snprintf(chan, sizeof(chan), "%u/%u", op_class, channel);
 	os_free(own_bi->chan);
 	own_bi->chan = os_strdup(chan);

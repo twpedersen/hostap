@@ -851,10 +851,11 @@ void hostapd_event_ch_switch(struct hostapd_data *hapd, int freq, int ht,
 
 	hostapd_logger(hapd, NULL, HOSTAPD_MODULE_IEEE80211,
 		       HOSTAPD_LEVEL_INFO,
-		       "driver %s channel switch: freq=%d, ht=%d, vht_ch=0x%x, offset=%d, width=%d (%s), cf1=%d, cf2=%d",
+		       "driver %s channel switch: freq=%g, ht=%d, vht_ch=0x%x, offset=%d, width=%d (%s), cf1=%g, cf2=%g",
 		       finished ? "had" : "starting",
-		       freq, ht, hapd->iconf->ch_switch_vht_config, offset,
-		       width, channel_width_to_string(width), cf1, cf2);
+		       PR_KHZ(freq), ht, hapd->iconf->ch_switch_vht_config,
+		       offset, width, channel_width_to_string(width),
+		       PR_KHZ(cf1), PR_KHZ(cf2));
 
 	if (!hapd->iface->current_mode) {
 		hostapd_logger(hapd, NULL, HOSTAPD_MODULE_IEEE80211,
@@ -893,10 +894,10 @@ void hostapd_event_ch_switch(struct hostapd_data *hapd, int freq, int ht,
 
 	switch (hapd->iface->current_mode->mode) {
 	case HOSTAPD_MODE_IEEE80211A:
-		if (cf1 > 5000)
-			seg0_idx = (cf1 - 5000) / 5;
-		if (cf2 > 5000)
-			seg1_idx = (cf2 - 5000) / 5;
+		if (MHZ(cf1) > 5000)
+			seg0_idx = (MHZ(cf1) - 5000) / 5;
+		if (MHZ(cf2) > 5000)
+			seg1_idx = (MHZ(cf2) - 5000) / 5;
 		break;
 	default:
 		ieee80211_freq_to_chan(cf1, &seg0_idx);
@@ -928,11 +929,11 @@ void hostapd_event_ch_switch(struct hostapd_data *hapd, int freq, int ht,
 				  hapd->iface->num_hw_features);
 
 	wpa_msg(hapd->msg_ctx, MSG_INFO,
-		"%sfreq=%d ht_enabled=%d ch_offset=%d ch_width=%s cf1=%d cf2=%d dfs=%d",
+		"%sfreq=%g ht_enabled=%d ch_offset=%d ch_width=%s cf1=%g cf2=%g dfs=%d",
 		finished ? WPA_EVENT_CHANNEL_SWITCH :
 		WPA_EVENT_CHANNEL_SWITCH_STARTED,
-		freq, ht, offset, channel_width_to_string(width),
-		cf1, cf2, is_dfs);
+		PR_KHZ(freq), ht, offset, channel_width_to_string(width),
+		PR_KHZ(cf1), PR_KHZ(cf2), is_dfs);
 	if (!finished)
 		return;
 
@@ -942,10 +943,10 @@ void hostapd_event_ch_switch(struct hostapd_data *hapd, int freq, int ht,
 		ieee802_11_set_beacon(hapd);
 
 		wpa_msg(hapd->msg_ctx, MSG_INFO, AP_CSA_FINISHED
-			"freq=%d dfs=%d", freq, is_dfs);
+			"freq=%g dfs=%d", PR_KHZ(freq), is_dfs);
 	} else if (hapd->iface->drv_flags & WPA_DRIVER_FLAGS_DFS_OFFLOAD) {
 		wpa_msg(hapd->msg_ctx, MSG_INFO, AP_CSA_FINISHED
-			"freq=%d dfs=%d", freq, is_dfs);
+			"freq=%g dfs=%d", PR_KHZ(freq), is_dfs);
 	} else if (is_dfs &&
 		   hostapd_is_dfs_required(hapd->iface) &&
 		   !hostapd_is_dfs_chan_available(hapd->iface) &&
@@ -1567,8 +1568,8 @@ static void hostapd_single_channel_get_survey(struct hostapd_iface *iface,
 		return;
 
 	wpa_printf(MSG_DEBUG,
-		   "Single Channel Survey: (freq=%d channel_time=%ld channel_time_busy=%ld)",
-		   survey->freq,
+		   "Single Channel Survey: (freq=%g channel_time=%ld channel_time_busy=%ld)",
+		   PR_KHZ(survey->freq),
 		   (unsigned long int) survey->channel_time,
 		   (unsigned long int) survey->channel_time_busy);
 
@@ -1641,7 +1642,7 @@ static void hostapd_event_iface_unavailable(struct hostapd_data *hapd)
 static void hostapd_event_dfs_radar_detected(struct hostapd_data *hapd,
 					     struct dfs_event *radar)
 {
-	wpa_printf(MSG_DEBUG, "DFS radar detected on %d MHz", radar->freq);
+	wpa_printf(MSG_DEBUG, "DFS radar detected on %d MHz", MHZ(radar->freq));
 	hostapd_dfs_radar_detected(hapd->iface, radar->freq, radar->ht_enabled,
 				   radar->chan_offset, radar->chan_width,
 				   radar->cf1, radar->cf2);
@@ -1651,7 +1652,7 @@ static void hostapd_event_dfs_radar_detected(struct hostapd_data *hapd,
 static void hostapd_event_dfs_pre_cac_expired(struct hostapd_data *hapd,
 					      struct dfs_event *radar)
 {
-	wpa_printf(MSG_DEBUG, "DFS Pre-CAC expired on %d MHz", radar->freq);
+	wpa_printf(MSG_DEBUG, "DFS Pre-CAC expired on %d MHz", MHZ(radar->freq));
 	hostapd_dfs_pre_cac_expired(hapd->iface, radar->freq, radar->ht_enabled,
 				    radar->chan_offset, radar->chan_width,
 				    radar->cf1, radar->cf2);
@@ -1661,7 +1662,7 @@ static void hostapd_event_dfs_pre_cac_expired(struct hostapd_data *hapd,
 static void hostapd_event_dfs_cac_finished(struct hostapd_data *hapd,
 					   struct dfs_event *radar)
 {
-	wpa_printf(MSG_DEBUG, "DFS CAC finished on %d MHz", radar->freq);
+	wpa_printf(MSG_DEBUG, "DFS CAC finished on %d MHz", MHZ(radar->freq));
 	hostapd_dfs_complete_cac(hapd->iface, 1, radar->freq, radar->ht_enabled,
 				 radar->chan_offset, radar->chan_width,
 				 radar->cf1, radar->cf2);
@@ -1671,7 +1672,7 @@ static void hostapd_event_dfs_cac_finished(struct hostapd_data *hapd,
 static void hostapd_event_dfs_cac_aborted(struct hostapd_data *hapd,
 					  struct dfs_event *radar)
 {
-	wpa_printf(MSG_DEBUG, "DFS CAC aborted on %d MHz", radar->freq);
+	wpa_printf(MSG_DEBUG, "DFS CAC aborted on %d MHz", MHZ(radar->freq));
 	hostapd_dfs_complete_cac(hapd->iface, 0, radar->freq, radar->ht_enabled,
 				 radar->chan_offset, radar->chan_width,
 				 radar->cf1, radar->cf2);
@@ -1681,7 +1682,7 @@ static void hostapd_event_dfs_cac_aborted(struct hostapd_data *hapd,
 static void hostapd_event_dfs_nop_finished(struct hostapd_data *hapd,
 					   struct dfs_event *radar)
 {
-	wpa_printf(MSG_DEBUG, "DFS NOP finished on %d MHz", radar->freq);
+	wpa_printf(MSG_DEBUG, "DFS NOP finished on %d MHz", MHZ(radar->freq));
 	hostapd_dfs_nop_finished(hapd->iface, radar->freq, radar->ht_enabled,
 				 radar->chan_offset, radar->chan_width,
 				 radar->cf1, radar->cf2);
@@ -1691,7 +1692,7 @@ static void hostapd_event_dfs_nop_finished(struct hostapd_data *hapd,
 static void hostapd_event_dfs_cac_started(struct hostapd_data *hapd,
 					  struct dfs_event *radar)
 {
-	wpa_printf(MSG_DEBUG, "DFS offload CAC started on %d MHz", radar->freq);
+	wpa_printf(MSG_DEBUG, "DFS offload CAC started on %d MHz", MHZ(radar->freq));
 	hostapd_dfs_start_cac(hapd->iface, radar->freq, radar->ht_enabled,
 			      radar->chan_offset, radar->chan_width,
 			      radar->cf1, radar->cf2);
