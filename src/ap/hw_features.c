@@ -167,7 +167,8 @@ int hostapd_prepare_rates(struct hostapd_iface *iface,
 		basic_rates = basic_rates_g;
 		break;
 	case HOSTAPD_MODE_IEEE80211AD:
-		return 0; /* No basic rates for 11ad */
+	case HOSTAPD_MODE_IEEE80211AH:
+		return 0; /* No basic rates for 11ad/11ah */
 	default:
 		return -1;
 	}
@@ -889,7 +890,9 @@ static void hostapd_determine_mode(struct hostapd_iface *iface)
 	    iface->conf->hw_mode != HOSTAPD_MODE_IEEE80211ANY)
 		return;
 
-	if (freq < 4000)
+	if (freq < 1000)
+		target_mode = HOSTAPD_MODE_IEEE80211AH;
+	else if (freq < 4000)
 		target_mode = HOSTAPD_MODE_IEEE80211G;
 	else if (freq > 50000)
 		target_mode = HOSTAPD_MODE_IEEE80211AD;
@@ -1086,6 +1089,8 @@ const char * hostapd_hw_mode_txt(int mode)
 		return "IEEE 802.11g";
 	case HOSTAPD_MODE_IEEE80211AD:
 		return "IEEE 802.11ad";
+	case HOSTAPD_MODE_IEEE80211AH:
+		return "IEEE 802.11ah";
 	default:
 		return "UNKNOWN";
 	}

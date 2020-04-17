@@ -889,6 +889,13 @@ enum hostapd_hw_mode ieee80211_freq_to_channel_ext(unsigned int freq_khz,
 	if (sec_channel > 1 || sec_channel < -1)
 		return NUM_HOSTAPD_MODES;
 
+	if (freq_khz >= 902500 && freq_khz <= 927500) {
+		/* TODO: op_class */
+		*op_class = 0;
+		*channel = (freq_khz - 902000) / 500;
+		return HOSTAPD_MODE_IEEE80211AH;
+	}
+
 	if (freq >= 2412 && freq <= 2472) {
 		if ((freq - 2407) % 5)
 			return NUM_HOSTAPD_MODES;
