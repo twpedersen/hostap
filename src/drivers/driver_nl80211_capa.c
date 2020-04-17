@@ -1956,11 +1956,8 @@ wpa_driver_nl80211_postprocess_modes(struct hostapd_hw_modes *modes,
 		 * What do?
 		 * */
 		if (modes[m].channels[0].freq < KHZ(2000)) {
-			/* currently some hostapd code (ACS scan) doesn't know
-			 * to check whether mode is unknown, so just hide the
-			 * channels for now */
-			modes[m].num_channels = 0;
-			continue;
+			/* TODO: does ACS need help? */
+			modes[m].mode = HOSTAPD_MODE_IEEE80211AH;
 		} else if (modes[m].channels[0].freq < KHZ(4000)) {
 			modes[m].mode = HOSTAPD_MODE_IEEE80211B;
 			for (i = 0; i < modes[m].num_rates; i++) {
@@ -2379,6 +2376,8 @@ static const char * modestr(enum hostapd_hw_mode mode)
 		return "802.11a";
 	case HOSTAPD_MODE_IEEE80211AD:
 		return "802.11ad";
+	case HOSTAPD_MODE_IEEE80211AH:
+		return "802.11ah";
 	default:
 		return "?";
 	}
