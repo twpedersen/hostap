@@ -1180,7 +1180,10 @@ static void send_scan_event(struct wpa_driver_nl80211_data *drv, int aborted,
 	struct scan_info *info;
 #define MAX_REPORT_FREQS 50
 	int freqs[MAX_REPORT_FREQS];
+	char msg[300], *pos, *end;
 	int num_freqs = 0;
+	int res;
+
 
 	if (!external_scan && drv->scan_for_auth) {
 		drv->scan_for_auth = 0;
@@ -1209,19 +1212,37 @@ static void send_scan_event(struct wpa_driver_nl80211_data *drv, int aborted,
 				break;
 		}
 	}
-	if (tb[NL80211_ATTR_SCAN_FREQUENCIES]) {
-		char msg[300], *pos, *end;
-		int res;
 
+	if (tb[NL80211_ATTR_SCAN_FREQ_KHZ]) {
+		pos = msg;
+		end = pos + sizeof(msg);
+		*pos = '\0';
+
+		nla_for_each_nested(nl, tb[NL80211_ATTR_SCAN_FREQ_KHZ], rem)
+		{
+			freqs[num_freqs] = nla_get_u32(nl);
+			res = os_snprintf(pos, end - pos, " %g",
+					  PR_KHZ(freqs[num_freqs]));
+			if (!os_snprintf_error(end - pos, res))
+				pos += res;
+			num_freqs++;
+			if (num_freqs == MAX_REPORT_FREQS - 1)
+				break;
+		}
+		info->freqs = freqs;
+		info->num_freqs = num_freqs;
+		wpa_printf(MSG_DEBUG, "nl80211: Scan included frequencies:%s",
+			   msg);
+	} else if (tb[NL80211_ATTR_SCAN_FREQUENCIES]) {
 		pos = msg;
 		end = pos + sizeof(msg);
 		*pos = '\0';
 
 		nla_for_each_nested(nl, tb[NL80211_ATTR_SCAN_FREQUENCIES], rem)
 		{
-			freqs[num_freqs] = nla_get_u32(nl);
-			res = os_snprintf(pos, end - pos, " %d",
-					  freqs[num_freqs]);
+			freqs[num_freqs] = KHZ(nla_get_u32(nl));
+			res = os_snprintf(pos, end - pos, " %g",
+					  PR_KHZ(freqs[num_freqs]));
 			if (!os_snprintf_error(end - pos, res))
 				pos += res;
 			num_freqs++;

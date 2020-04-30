@@ -214,7 +214,21 @@ nl80211_scan_common(struct i802_bss *bss, u8 cmd,
 			goto fail;
 	}
 
-	if (params->freqs) {
+	if (params->freqs &&
+	    drv->capa.flags2 & WPA_DRIVER_FLAGS2_SCAN_FREQ_KHZ) {
+		struct nlattr *freqs;
+		freqs = nla_nest_start(msg, NL80211_ATTR_SCAN_FREQ_KHZ);
+		if (freqs == NULL)
+			goto fail;
+		for (i = 0; params->freqs[i]; i++) {
+			wpa_printf(MSG_MSGDUMP, "nl80211: Scan frequency %g "
+				   "MHz", PR_KHZ(params->freqs[i]));
+			if (nla_put_u32(msg, i + 1, params->freqs[i]))
+				goto fail;
+		}
+		nla_nest_end(msg, freqs);
+		scan_flags |= NL80211_SCAN_FLAG_FREQ_KHZ;
+	} else if (params->freqs) {
 		struct nlattr *freqs;
 		freqs = nla_nest_start(msg, NL80211_ATTR_SCAN_FREQUENCIES);
 		if (freqs == NULL)

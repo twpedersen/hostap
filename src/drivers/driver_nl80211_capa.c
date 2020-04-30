@@ -639,6 +639,9 @@ static void wiphy_info_ext_feature_flags(struct wiphy_info_data *info,
 	if (ext_feature_isset(ext_features, len,
 			      NL80211_EXT_FEATURE_MULTICAST_REGISTRATIONS))
 		info->drv->multicast_registrations = 1;
+	if (ext_feature_isset(ext_features, len,
+			      NL80211_EXT_FEATURE_SCAN_FREQ_KHZ))
+		capa->flags2 |= WPA_DRIVER_FLAGS2_SCAN_FREQ_KHZ;
 }
 
 
