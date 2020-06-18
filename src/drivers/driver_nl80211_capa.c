@@ -1506,6 +1506,9 @@ static void phy_info_freq(struct hostapd_hw_modes *mode,
 	chan->allowed_bw = ~0;
 	chan->dfs_cac_ms = 0;
 
+	if (tb_freq[NL80211_FREQUENCY_ATTR_OFFSET])
+		chan->freq += nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_OFFSET]);
+
 	if (ieee80211_freq_to_chan(chan->freq, &channel) != NUM_HOSTAPD_MODES)
 		chan->chan = channel;
 	else

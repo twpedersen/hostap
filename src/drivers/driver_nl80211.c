@@ -3667,6 +3667,9 @@ retry:
 		wpa_printf(MSG_DEBUG, "  * freq=%g", PR_KHZ(params->freq));
 		if (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ, MHZ(params->freq)))
 			goto fail;
+		if (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ_OFFSET,
+				params->freq % 1000))
+			goto fail;
 	}
 	if (params->ssid) {
 		wpa_printf(MSG_DEBUG, "  * SSID=%s",
@@ -4549,6 +4552,8 @@ static int nl80211_put_freq_params(struct nl_msg *msg, const u64 flags,
 
 	wpa_printf(MSG_DEBUG, "  * freq=%g", PR_KHZ(freq->freq));
 	if (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ, MHZ(freq->freq)))
+		return -ENOBUFS;
+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ_OFFSET, freq->freq % 1000))
 		return -ENOBUFS;
 
 	wpa_printf(MSG_DEBUG, "  * he_enabled=%d", freq->he_enabled);
@@ -5741,6 +5746,9 @@ static int nl80211_connect_common(struct wpa_driver_nl80211_data *drv,
 			   PR_KHZ(params->freq.freq));
 		if (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
 				MHZ(params->freq.freq)))
+			return -1;
+		if (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ_OFFSET,
+				params->freq.freq % 1000))
 			return -1;
 		drv->assoc_freq = params->freq.freq;
 	} else
@@ -7733,6 +7741,8 @@ static int nl80211_send_frame_cmd(struct i802_bss *bss,
 	if (!(msg = nl80211_cmd_msg(bss, 0, NL80211_CMD_FRAME)) ||
 	    (freq && nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
 				 MHZ(freq))) ||
+	    (freq && nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ_OFFSET,
+				 freq % 1000)) ||
 	    (wait && nla_put_u32(msg, NL80211_ATTR_DURATION, wait)) ||
 	    (offchanok && ((drv->capa.flags & WPA_DRIVER_FLAGS_OFFCHANNEL_TX) ||
 			   drv->test_use_roc_tx) &&

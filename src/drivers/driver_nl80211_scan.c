@@ -703,6 +703,7 @@ nl80211_parse_bss_info(struct wpa_driver_nl80211_data *drv,
 	static struct nla_policy bss_policy[NL80211_BSS_MAX + 1] = {
 		[NL80211_BSS_BSSID] = { .type = NLA_UNSPEC },
 		[NL80211_BSS_FREQUENCY] = { .type = NLA_U32 },
+		[NL80211_BSS_FREQUENCY_OFFSET] = { .type = NLA_U32 },
 		[NL80211_BSS_TSF] = { .type = NLA_U64 },
 		[NL80211_BSS_BEACON_INTERVAL] = { .type = NLA_U16 },
 		[NL80211_BSS_CAPABILITY] = { .type = NLA_U16 },
@@ -755,6 +756,8 @@ nl80211_parse_bss_info(struct wpa_driver_nl80211_data *drv,
 			  ETH_ALEN);
 	if (bss[NL80211_BSS_FREQUENCY])
 		r->freq = KHZ(nla_get_u32(bss[NL80211_BSS_FREQUENCY]));
+	if (bss[NL80211_BSS_FREQUENCY_OFFSET])
+		r->freq += nla_get_u32(bss[NL80211_BSS_FREQUENCY_OFFSET]);
 	if (bss[NL80211_BSS_BEACON_INTERVAL])
 		r->beacon_int = nla_get_u16(bss[NL80211_BSS_BEACON_INTERVAL]);
 	if (bss[NL80211_BSS_CAPABILITY])

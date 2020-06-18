@@ -635,8 +635,7 @@ static void mlme_timeout_event(struct wpa_driver_nl80211_data *drv,
 }
 
 
-static void mlme_event_mgmt(struct i802_bss *bss,
-			    struct nlattr *freq, struct nlattr *sig,
+static void mlme_event_mgmt(struct i802_bss *bss, u32 freq, struct nlattr *sig,
 			    const u8 *frame, size_t len)
 {
 	struct wpa_driver_nl80211_data *drv = bss->drv;
@@ -660,10 +659,8 @@ static void mlme_event_mgmt(struct i802_bss *bss,
 		ssi_signal = (s32) nla_get_u32(sig);
 
 	os_memset(&event, 0, sizeof(event));
-	if (freq) {
-		event.rx_mgmt.freq = KHZ(nla_get_u32(freq));
-		rx_freq = drv->last_mgmt_freq = event.rx_mgmt.freq;
-	}
+	event.rx_mgmt.freq = freq;
+	rx_freq = drv->last_mgmt_freq = event.rx_mgmt.freq;
 	wpa_printf(MSG_DEBUG,
 		   "nl80211: RX frame da=" MACSTR " sa=" MACSTR " bssid=" MACSTR
 		   " freq=%g ssi_signal=%d fc=0x%x seq_ctrl=0x%x stype=%u (%s) len=%u",
@@ -914,11 +911,13 @@ static void mlme_event_unprot_beacon(struct wpa_driver_nl80211_data *drv,
 static void mlme_event(struct i802_bss *bss,
 		       enum nl80211_commands cmd, struct nlattr *frame,
 		       struct nlattr *addr, struct nlattr *timed_out,
-		       struct nlattr *freq, struct nlattr *ack,
+		       struct nlattr *freq, struct nlattr *freq_offset,
+		       struct nlattr *ack,
 		       struct nlattr *cookie, struct nlattr *sig,
 		       struct nlattr *wmm, struct nlattr *req_ie)
 {
 	struct wpa_driver_nl80211_data *drv = bss->drv;
+	u32 frequency = 0;
 	const u8 *data;
 	size_t len;
 
@@ -933,6 +932,11 @@ static void mlme_event(struct i802_bss *bss,
 			   cmd, nl80211_command_to_string(cmd));
 		return;
 	}
+
+	if (freq)
+		frequency = KHZ(nla_get_u32(freq));
+	if (freq_offset)
+		frequency += nla_get_u32(freq_offset);
 
 	data = nla_data(frame);
 	len = nla_len(frame);
@@ -977,7 +981,7 @@ static void mlme_event(struct i802_bss *bss,
 					   nla_data(frame), nla_len(frame));
 		break;
 	case NL80211_CMD_FRAME:
-		mlme_event_mgmt(bss, freq, sig, nla_data(frame),
+		mlme_event_mgmt(bss, frequency, sig, nla_data(frame),
 				nla_len(frame));
 		break;
 	case NL80211_CMD_FRAME_TX_STATUS:
@@ -2661,6 +2665,7 @@ static void do_process_drv_event(struct i802_bss *bss, int cmd,
 		mlme_event(bss, cmd, tb[NL80211_ATTR_FRAME],
 			   tb[NL80211_ATTR_MAC], tb[NL80211_ATTR_TIMED_OUT],
 			   tb[NL80211_ATTR_WIPHY_FREQ],
+			   tb[NL80211_ATTR_WIPHY_FREQ_OFFSET],
 			   tb[NL80211_ATTR_ACK],
 			   tb[NL80211_ATTR_COOKIE],
 			   tb[NL80211_ATTR_RX_SIGNAL_DBM],
@@ -2856,6 +2861,7 @@ int process_bss_event(struct nl_msg *msg, void *arg)
 		mlme_event(bss, gnlh->cmd, tb[NL80211_ATTR_FRAME],
 			   tb[NL80211_ATTR_MAC], tb[NL80211_ATTR_TIMED_OUT],
 			   tb[NL80211_ATTR_WIPHY_FREQ],
+			   tb[NL80211_ATTR_WIPHY_FREQ_OFFSET],
 			   tb[NL80211_ATTR_ACK],
 			   tb[NL80211_ATTR_COOKIE],
 			   tb[NL80211_ATTR_RX_SIGNAL_DBM],
