@@ -1438,6 +1438,9 @@ static size_t ieee802_11_build_s1g_bcn_tail(struct hostapd_data *hapd,
 	pos = hostapd_eid_s1g_capab(hapd, tail);
 	pos = hostapd_eid_s1g_oper(hapd, pos);
 
+	/* Wi-Fi Alliance WMM */
+	pos = hostapd_eid_wmm(hapd, pos);
+
 	return pos > tail ? pos - tail : 0;
 }
 
