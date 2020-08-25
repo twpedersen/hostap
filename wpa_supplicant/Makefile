@@ -1665,6 +1665,10 @@ ifdef NEED_BASE64
 OBJS += ../src/utils/base64.o
 endif
 
+ifdef CONFIG_IEEE80211AH
+CFLAGS += -DCONFIG_IEEE80211AH
+endif
+
 ifdef NEED_SME
 OBJS += sme.o
 CFLAGS += -DCONFIG_SME

@@ -335,6 +335,11 @@ NEED_ECC=y
 endif
 endif
 
+ifdef CONFIG_IEEE80211AH
+CONFIG_WNM=y
+CFLAGS += -DCONFIG_IEEE80211AH
+endif
+
 ifdef CONFIG_WNM
 CFLAGS += -DCONFIG_WNM -DCONFIG_WNM_AP
 OBJS += ../src/ap/wnm_ap.o
