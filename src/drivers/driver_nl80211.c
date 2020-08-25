@@ -4835,6 +4835,8 @@ static int wpa_driver_nl80211_sta_add(void *priv,
 		}
 
 #ifdef CONFIG_IEEE80211AH
+		/* TODO: setting STA capabilities is rejected by nl80211 */
+#if 0
 		if (params->s1g_capabilities) {
 			wpa_hexdump(MSG_DEBUG, "  * s1g_capabilities",
 				    (u8 *) params->s1g_capabilities,
@@ -4844,6 +4846,7 @@ static int wpa_driver_nl80211_sta_add(void *priv,
 				    params->s1g_capabilities))
 				goto fail;
 		}
+#endif
 #endif
 
 		if (params->ext_capab) {
