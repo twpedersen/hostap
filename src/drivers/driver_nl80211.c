@@ -8551,6 +8551,10 @@ static void add_survey(struct nlattr **sinfo, u32 ifidx,
 	survey->freq = KHZ(nla_get_u32(sinfo[NL80211_SURVEY_INFO_FREQUENCY]));
 	survey->filled = 0;
 
+	if (sinfo[NL80211_SURVEY_INFO_FREQUENCY_OFFSET])
+		survey->freq +=
+			nla_get_u32(sinfo[NL80211_SURVEY_INFO_FREQUENCY_OFFSET]);
+
 	if (sinfo[NL80211_SURVEY_INFO_NOISE]) {
 		survey->nf = (int8_t)
 			nla_get_u8(sinfo[NL80211_SURVEY_INFO_NOISE]);
