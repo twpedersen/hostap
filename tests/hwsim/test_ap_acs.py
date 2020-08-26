@@ -40,7 +40,7 @@ def wait_acs(hapd, return_after_acs=False):
         raise Exception("Unexpected interface state %s (expected ACS)" % state)
 
     ev = hapd.wait_event(["ACS-COMPLETED", "ACS-FAILED", "AP-ENABLED",
-                          "AP-DISABLED"], timeout=20)
+                          "AP-DISABLED"], timeout=50)
     if not ev:
         raise Exception("ACS timed out")
     if "ACS-COMPLETED" not in ev:
