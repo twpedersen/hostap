@@ -169,6 +169,7 @@ if [ -z $KVM ]; then
 	     100<>$LOGDIR/console 2>&1 | \
 	    sed -u '0,/VM has started up/d'
 else
+	set -x
 	$KVM \
 	    -kernel $KERNEL \
 	    -smp 4 \

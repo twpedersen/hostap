@@ -418,6 +418,8 @@ void perror(const char *s);
 #define MAC2STR(a) (a)[0], (a)[1], (a)[2], (a)[3], (a)[4], (a)[5]
 #define MACSTR "%02x:%02x:%02x:%02x:%02x:%02x"
 
+#define FREQ2STR(freq) (freq), freq##_offset
+
 /*
  * Compact form for string representation of MAC address
  * To be used, e.g., for constructing dbus paths for P2P Devices

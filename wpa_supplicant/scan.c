@@ -2184,17 +2184,18 @@ static void dump_scan_res(struct wpa_scan_results *scan_res)
 		if (r->flags & WPA_SCAN_LEVEL_DBM) {
 			int noise_valid = !(r->flags & WPA_SCAN_NOISE_INVALID);
 
-			wpa_printf(MSG_EXCESSIVE, MACSTR " freq=%d qual=%d "
+			wpa_printf(MSG_EXCESSIVE, MACSTR " freq=%d.%d qual=%d "
 				   "noise=%d%s level=%d snr=%d%s flags=0x%x age=%u est=%u",
-				   MAC2STR(r->bssid), r->freq, r->qual,
-				   r->noise, noise_valid ? "" : "~", r->level,
+				   MAC2STR(r->bssid), FREQ2STR(r->freq),
+				   r->qual, r->noise,
+				   noise_valid ? "" : "~", r->level,
 				   r->snr, r->snr >= GREAT_SNR ? "*" : "",
 				   r->flags,
 				   r->age, r->est_throughput);
 		} else {
-			wpa_printf(MSG_EXCESSIVE, MACSTR " freq=%d qual=%d "
+			wpa_printf(MSG_EXCESSIVE, MACSTR " freq=%d.%d qual=%d "
 				   "noise=%d level=%d flags=0x%x age=%u est=%u",
-				   MAC2STR(r->bssid), r->freq, r->qual,
+				   MAC2STR(r->bssid), FREQ2STR(r->freq), r->qual,
 				   r->noise, r->level, r->flags, r->age,
 				   r->est_throughput);
 		}

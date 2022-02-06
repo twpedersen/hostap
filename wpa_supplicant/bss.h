@@ -96,6 +96,8 @@ struct wpa_bss {
 	size_t ssid_len;
 	/** Frequency of the channel in MHz (e.g., 2412 = channel 1) */
 	int freq;
+	/** Offset of channel frequency in KHz */
+	int freq_offset;
 	/** Beacon interval in TUs (host byte order) */
 	u16 beacon_int;
 	/** Capability information field in host byte order */
